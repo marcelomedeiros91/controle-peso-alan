@@ -1,0 +1,1909 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <title>Controle de Peso e Medidas - Alan</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+              900: '#064e3b',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #0f172a;
+      color: #f8fafc;
+    }
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #1e293b;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #475569;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #64748b;
+    }
+    /* Sticky table column for mobile horizontal scroll */
+    .sticky-col {
+      position: sticky;
+      left: 0;
+      z-index: 10;
+      background-color: inherit;
+    }
+    .glass-panel {
+      background: rgba(30, 41, 59, 0.85);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(148, 163, 184, 0.15);
+    }
+    .goal-glow {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.18) 0%, rgba(15, 23, 42, 0.95) 60%, rgba(59, 130, 246, 0.15) 100%);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      box-shadow: 0 10px 30px -10px rgba(16, 185, 129, 0.25);
+    }
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body class="min-h-screen pb-24 selection:bg-emerald-500 selection:text-white">
+
+  <!-- TOP NAVIGATION BAR -->
+  <header class="sticky top-0 z-30 bg-slate-900/90 backdrop-blur-md border-b border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+          <i class="fa-solid fa-weight-scale text-white text-lg"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-lg sm:text-xl font-extrabold tracking-tight text-white">Controle Peso & Medidas</h1>
+            <span class="px-2 py-0.5 text-xs font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full">Alan</span>
+          </div>
+          <p class="text-xs text-slate-400 flex items-center gap-2">
+            <span id="syncStatusIndicator" class="inline-flex items-center gap-1.5 text-emerald-400">
+              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span id="syncStatusText">Sincronizado</span>
+            </span>
+          </p>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex items-center gap-2 sm:gap-3">
+        <button onclick="openSyncModal()" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs sm:text-sm font-medium flex items-center gap-2 transition" title="Sincronizar Computador e Celular / Backup">
+          <i class="fa-solid fa-cloud-arrow-up text-sky-400"></i>
+          <span class="hidden sm:inline">Sincronizar / GitHub</span>
+          <span class="sm:hidden">Sync</span>
+        </button>
+
+        <button onclick="openGoalModal()" class="px-3 py-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 text-xs sm:text-sm font-semibold flex items-center gap-2 transition">
+          <i class="fa-solid fa-bullseye"></i>
+          <span>Editar Meta</span>
+        </button>
+
+        <button onclick="openRecordModal()" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white text-xs sm:text-sm font-bold shadow-lg shadow-emerald-500/25 flex items-center gap-2 transition transform active:scale-95">
+          <i class="fa-solid fa-plus"></i>
+          <span>Novo Registro</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-6">
+
+    <!-- 1. HERO GOAL SECTION (META EM DESTAQUE NO TOPO - EDITÁVEL) -->
+    <section class="goal-glow rounded-2xl p-5 sm:p-6 relative overflow-hidden">
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+        
+        <!-- Left: Main Weight Goal & Quick Inline Edit -->
+        <div class="space-y-3 flex-1">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-bold uppercase tracking-wider">
+            <i class="fa-solid fa-trophy text-amber-400"></i>
+            <span>Meta Principal em Destaque</span>
+            <span id="daysRemainingBadge" class="ml-1 px-2 py-0.5 rounded-full bg-slate-900/80 text-white"></span>
+          </div>
+
+          <div class="flex flex-wrap items-baseline gap-x-4 gap-y-2">
+            <div>
+              <span class="text-slate-400 text-xs sm:text-sm font-medium block">Meta para <button onclick="openGoalModal()" class="underline decoration-dotted hover:text-emerald-400 transition font-semibold" id="goalDateDisplay">31/12/2026</button>:</span>
+              <div class="flex items-center gap-3 mt-0.5">
+                <span id="goalWeightDisplay" class="text-4xl sm:text-5xl font-black tracking-tight text-white">93,00 <small class="text-2xl font-bold text-emerald-400">kg</small></span>
+                <button onclick="openGoalModal()" class="px-3 py-1.5 rounded-xl bg-slate-800/90 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/40 text-xs font-bold flex items-center gap-1.5 transition shadow-sm" title="Clique para alterar a Meta de Peso, Data ou Medidas">
+                  <i class="fa-solid fa-pen-to-square"></i>
+                  <span>Alterar Meta</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Progress Bar -->
+          <div class="pt-1 max-w-xl">
+            <div class="flex justify-between text-xs font-semibold mb-1.5">
+              <span class="text-slate-300">Início: <strong id="initialWeightLabel" class="text-white">100,00 kg</strong></span>
+              <span id="goalProgressPercentLabel" class="text-emerald-400 font-bold">26,4% da meta atingida</span>
+              <span class="text-emerald-300">Meta: <strong id="targetWeightBarLabel">93,00 kg</strong></span>
+            </div>
+            <div class="w-full h-3.5 bg-slate-900/90 rounded-full overflow-hidden border border-slate-700/80 p-0.5">
+              <div id="goalProgressBar" class="h-full bg-gradient-to-r from-emerald-500 via-teal-400 to-sky-400 rounded-full transition-all duration-500" style="width: 26.4%"></div>
+            </div>
+            <p id="weeklyPaceText" class="text-xs text-slate-400 mt-2"></p>
+          </div>
+        </div>
+
+        <!-- Right: 3 Key Stat Cards (Peso Atual, Eliminado, Falta para a Meta) -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 lg:w-[540px]">
+          <!-- Card 1: Peso Atual -->
+          <div class="bg-slate-900/80 border border-slate-700/80 rounded-xl p-4 flex flex-col justify-between">
+            <div class="flex items-center justify-between text-xs text-slate-400 font-medium">
+              <span>PESO ATUAL</span>
+              <i class="fa-solid fa-scale-balanced text-sky-400"></i>
+            </div>
+            <div class="my-1">
+              <span id="currentWeightCard" class="text-2xl sm:text-3xl font-extrabold text-white">98,15</span>
+              <span class="text-sm font-bold text-slate-400">kg</span>
+            </div>
+            <div id="lastRecordDateCard" class="text-[11px] text-slate-400">Em 03/11/2026 às 10:27</div>
+          </div>
+
+          <!-- Card 2: Total Eliminado -->
+          <div class="bg-slate-900/80 border border-slate-700/80 rounded-xl p-4 flex flex-col justify-between">
+            <div class="flex items-center justify-between text-xs text-slate-400 font-medium">
+              <span>EVOLUÇÃO TOTAL</span>
+              <i class="fa-solid fa-arrow-trend-down text-emerald-400"></i>
+            </div>
+            <div class="my-1">
+              <span id="totalLostCard" class="text-2xl sm:text-3xl font-extrabold text-emerald-400">-1,85</span>
+              <span class="text-sm font-bold text-emerald-400/80">kg</span>
+            </div>
+            <div id="lastDeltaCard" class="text-[11px] text-slate-400">Última pesagem: -0,70 kg</div>
+          </div>
+
+          <!-- Card 3: Falta para a Meta -->
+          <div class="bg-slate-900/80 border border-emerald-500/30 rounded-xl p-4 flex flex-col justify-between">
+            <div class="flex items-center justify-between text-xs text-amber-300 font-semibold">
+              <span>FALTA P/ A META</span>
+              <i class="fa-solid fa-flag-checkered text-amber-400"></i>
+            </div>
+            <div class="my-1">
+              <span id="remainingToGoalCard" class="text-2xl sm:text-3xl font-extrabold text-amber-300">5,15</span>
+              <span class="text-sm font-bold text-amber-300/80">kg</span>
+            </div>
+            <div id="remainingTargetSubtext" class="text-[11px] text-slate-400">Para chegar aos 93,00 kg</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Measurements Goal Progress Strip (Editável e Comparativo) -->
+      <div class="mt-6 pt-5 border-t border-slate-700/60">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <h2 class="text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+            <i class="fa-solid fa-ruler-combined text-emerald-400"></i>
+            <span>Metas de Medidas Corporais (Atual vs. Meta em <span id="goalDateShortLabel">31/12/2026</span>)</span>
+          </h2>
+          <button onclick="openGoalModal()" class="text-xs text-emerald-400 hover:text-emerald-300 font-semibold flex items-center gap-1">
+            <i class="fa-solid fa-Sliders"></i> Editar metas de medidas
+          </button>
+        </div>
+
+        <div id="measurementsGoalGrid" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2.5">
+          <!-- Populated dynamically by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. RECORDS TABLE & INLINE/MODAL EDITING SECTION -->
+    <section class="glass-panel rounded-2xl p-4 sm:p-6 space-y-4">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h2 class="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-table-list text-emerald-400"></i>
+            <span>Planilha de Registros (Peso e Medidas)</span>
+            <span id="recordsCountBadge" class="px-2.5 py-0.5 text-xs font-bold rounded-full bg-slate-800 text-slate-300 border border-slate-700">5 registros</span>
+          </h2>
+          <p class="text-xs sm:text-sm text-slate-400 mt-0.5">
+            Você pode clicar em <strong>"Editar"</strong> em qualquer linha ou ativar a <strong>Edição Direta na Tabela</strong> para alterar valores como no Excel.
+          </p>
+        </div>
+
+        <!-- Controls: Inline Edit Toggle, Mobile View Toggle, New Record -->
+        <div class="flex flex-wrap items-center gap-2">
+          <!-- Toggle Direct Spreadsheet Edit Mode -->
+          <button id="toggleInlineEditBtn" onclick="toggleInlineEditMode()" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold flex items-center gap-2 transition">
+            <i class="fa-solid fa-keyboard text-amber-400"></i>
+            <span id="inlineEditBtnText">Edição Direta na Tabela: OFF</span>
+          </button>
+
+          <!-- View Switcher (Table vs Cards) -->
+          <div class="inline-flex rounded-xl bg-slate-900 p-1 border border-slate-800">
+            <button id="viewTableBtn" onclick="setViewMode('table')" class="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 bg-emerald-600 text-white transition">
+              <i class="fa-solid fa-table"></i>
+              <span>Planilha</span>
+            </button>
+            <button id="viewCardsBtn" onclick="setViewMode('cards')" class="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 text-slate-400 hover:text-white transition">
+              <i class="fa-solid fa-grip"></i>
+              <span>Cards (Celular)</span>
+            </button>
+          </div>
+
+          <button onclick="openRecordModal()" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 transition">
+            <i class="fa-solid fa-plus"></i>
+            <span>Inserir Registro</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Banner when Inline Edit Mode is ON -->
+      <div id="inlineEditBanner" class="hidden rounded-xl bg-amber-500/15 border border-amber-500/40 px-4 py-3 text-xs sm:text-sm text-amber-200 flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-bolt text-amber-400 text-base"></i>
+          <span><strong>Modo Edição Direta Ativo:</strong> Altere qualquer data, hora, peso ou medida diretamente nas células abaixo. Tudo é salvo automaticamente!</span>
+        </div>
+        <button onclick="toggleInlineEditMode()" class="px-3 py-1 rounded-lg bg-amber-500 text-slate-950 font-bold text-xs hover:bg-amber-400 transition">
+          Concluir Edição Direta
+        </button>
+      </div>
+
+      <!-- SPREADSHEET TABLE VIEW -->
+      <div id="tableViewContainer" class="overflow-x-auto rounded-xl border border-slate-700/80 bg-slate-900/60">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-slate-800/90 text-slate-300 text-[11px] sm:text-xs font-bold uppercase tracking-wider border-b border-slate-700">
+              <th class="py-3.5 px-3 sticky-col bg-slate-800">Dia</th>
+              <th class="py-3.5 px-2.5 text-center">Hora</th>
+              <th class="py-3.5 px-3 text-center bg-emerald-950/40 text-emerald-300 border-x border-slate-700/60">Peso Nu (kg)</th>
+              <th class="py-3.5 px-2.5 text-center">Braço</th>
+              <th class="py-3.5 px-2.5 text-center">Antebraço</th>
+              <th class="py-3.5 px-2.5 text-center">Coxa</th>
+              <th class="py-3.5 px-2.5 text-center">Panturrilha</th>
+              <th class="py-3.5 px-2.5 text-center">Quadril</th>
+              <th class="py-3.5 px-2.5 text-center">Barriga</th>
+              <th class="py-3.5 px-2.5 text-center">Abdômen</th>
+              <th class="py-3.5 px-2.5 text-center">Peitoral</th>
+              <th class="py-3.5 px-3 text-center">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="recordsTableBody" class="divide-y divide-slate-800 text-xs sm:text-sm">
+            <!-- Populated by JS -->
+          </tbody>
+          <tfoot id="recordsTableFooter" class="border-t-2 border-emerald-500/50 bg-slate-900/95 text-xs sm:text-sm">
+            <!-- Goal Row & Difference Row populated by JS -->
+          </tfoot>
+        </table>
+      </div>
+
+      <!-- MOBILE / CARDS VIEW -->
+      <div id="cardsViewContainer" class="hidden grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Populated by JS -->
+      </div>
+    </section>
+
+    <!-- 3. INTERACTIVE CHARTS SECTION -->
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Weight Chart -->
+      <div class="glass-panel rounded-2xl p-4 sm:p-6 flex flex-col justify-between">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+          <div>
+            <h3 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-chart-line text-emerald-400"></i>
+              <span>Evolução do Peso Nu vs. Meta</span>
+            </h3>
+            <p class="text-xs text-slate-400">Histórico de pesagens rumo à linha de meta (<span id="chartGoalWeightText">93,00 kg</span>)</p>
+          </div>
+          <span class="px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-semibold">
+            Meta: <strong id="chartBadgeGoal">93,00 kg</strong>
+          </span>
+        </div>
+        <div class="relative w-full h-64 sm:h-72 bg-slate-900/70 rounded-xl border border-slate-800 p-3">
+          <canvas id="weightChartCanvas" class="w-full h-full"></canvas>
+        </div>
+      </div>
+
+      <!-- Body Measurements Evolution Chart -->
+      <div class="glass-panel rounded-2xl p-4 sm:p-6 flex flex-col justify-between">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+          <div>
+            <h3 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-ruler-horizontal text-sky-400"></i>
+              <span>Evolução das Medidas (cm)</span>
+            </h3>
+            <p class="text-xs text-slate-400">Selecione a medida para comparar evolução e meta de 31/12/2026</p>
+          </div>
+          <select id="selectedMeasurementChart" onchange="renderCharts()" class="px-3 py-1.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs sm:text-sm font-semibold focus:outline-none focus:border-emerald-500">
+            <option value="barriga">Barriga (cm)</option>
+            <option value="abdomen">Abdômen (cm)</option>
+            <option value="quadril">Quadril (cm)</option>
+            <option value="peitoral">Peitoral (cm)</option>
+            <option value="coxa">Coxa (cm)</option>
+            <option value="panturrilha">Panturrilha (cm)</option>
+            <option value="braco">Braço (cm)</option>
+            <option value="antebraco">Antebraço (cm)</option>
+          </select>
+        </div>
+        <div class="relative w-full h-64 sm:h-72 bg-slate-900/70 rounded-xl border border-slate-800 p-3">
+          <canvas id="measureChartCanvas" class="w-full h-full"></canvas>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FLOATING ACTION BUTTON FOR MOBILE -->
+  <button onclick="openRecordModal()" class="sm:hidden fixed bottom-5 right-5 z-20 w-14 h-14 rounded-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-xl shadow-emerald-500/40 flex items-center justify-center text-xl active:scale-95 transition" title="Novo Registro">
+    <i class="fa-solid fa-plus"></i>
+  </button>
+
+  <!-- ===================================================================== -->
+  <!-- MODAL 1: INSERIR OU EDITAR REGISTRO -->
+  <!-- ===================================================================== -->
+  <div id="recordModal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-2xl w-full p-5 sm:p-6 shadow-2xl my-auto">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
+            <i id="recordModalIcon" class="fa-solid fa-plus"></i>
+          </div>
+          <div>
+            <h3 id="recordModalTitle" class="text-lg font-bold text-white">Novo Registro de Peso e Medidas</h3>
+            <p id="recordModalSubtitle" class="text-xs text-slate-400">Preencha os dados da medição abaixo</p>
+          </div>
+        </div>
+        <button onclick="closeRecordModal()" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <form id="recordForm" onsubmit="saveRecordForm(event)" class="mt-4 space-y-4">
+        <input type="hidden" id="recordIdInput" />
+
+        <!-- Quick fill helper -->
+        <div id="copyLastRecordHelper" class="flex items-center justify-between bg-slate-800/70 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-xs">
+          <span class="text-slate-300">Quer manter as medidas anteriores e só atualizar o que mudou?</span>
+          <button type="button" onclick="fillWithLastRecord()" class="px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 font-semibold transition">
+            <i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Repetir últimas medidas
+          </button>
+        </div>
+
+        <!-- Primary Row: Date, Time, Weight -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-800/40 p-3.5 rounded-xl border border-slate-800">
+          <div>
+            <label class="block text-xs font-bold uppercase text-slate-300 mb-1">Dia (Data) *</label>
+            <input type="date" id="recData" required class="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm font-semibold focus:outline-none focus:border-emerald-500" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold uppercase text-slate-300 mb-1">Hora *</label>
+            <input type="time" id="recHora" required class="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm font-semibold focus:outline-none focus:border-emerald-500" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold uppercase text-emerald-400 mb-1">Peso Nu (kg) *</label>
+            <input type="number" step="0.01" min="30" max="300" id="recPeso" required placeholder="Ex: 98.15" class="w-full px-3 py-2.5 rounded-xl bg-emerald-950/40 border border-emerald-500/50 text-white text-base font-extrabold focus:outline-none focus:border-emerald-400" />
+          </div>
+        </div>
+
+        <!-- Measurements Grid (8 fields in cm) -->
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Medidas Corporais (em centímetros)</span>
+            <span class="text-[11px] text-slate-400">Aceita números inteiros ou decimais</span>
+          </div>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Braço (cm)</label>
+              <input type="number" step="0.1" id="recBraco" required placeholder="35" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm font-semibold focus:outline-none focus:border-emerald-500" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Antebraço (cm)</label>
+              <input type="number" step="0.1" id="recAntebraco" required placeholder="30" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm font-semibold focus:outline-none focus:border-emerald-500" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Coxa (cm)</label>
+              <input type="number" step="0.1" id="recCoxa" required placeholder="65" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm font-semibold focus:outline-none focus:border-emerald-500" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Panturrilha (cm)</label>
+              <input type="number" step="0.1" id="recPanturrilha" required placeholder="44" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm font-semibold focus:outline-none focus:border-emerald-500" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Quadril (cm)</label>
+              <input type="number" step="0.1" id="recQuadril" required placeholder="113" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm font-semibold focus:outline-none focus:border-emerald-500" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Barriga (cm)</label>
+              <input type="number" step="0.1" id="recBarriga" required placeholder="110" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm font-semibold focus:outline-none focus:border-emerald-500" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Abdômen (cm)</label>
+              <input type="number" step="0.1" id="recAbdomen" required placeholder="105" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm font-semibold focus:outline-none focus:border-emerald-500" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Peitoral (cm)</label>
+              <input type="number" step="0.1" id="recPeitoral" required placeholder="114" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm font-semibold focus:outline-none focus:border-emerald-500" />
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
+          <button type="button" onclick="closeRecordModal()" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs sm:text-sm font-semibold">
+            Cancelar
+          </button>
+          <button type="submit" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white text-xs sm:text-sm font-bold shadow-lg shadow-emerald-500/25 flex items-center gap-2">
+            <i class="fa-solid fa-check"></i>
+            <span id="recordSubmitBtnText">Salvar Registro</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- MODAL 2: EDITAR META PRINCIPAL (31/12/2026 E MEDIDAS-ALVO) -->
+  <!-- ===================================================================== -->
+  <div id="goalModal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+    <div class="bg-slate-900 border border-amber-500/40 rounded-2xl max-w-2xl w-full p-5 sm:p-6 shadow-2xl my-auto">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400">
+            <i class="fa-solid fa-bullseye"></i>
+          </div>
+          <div>
+            <h3 class="text-lg font-bold text-white">Editar Meta de Peso e Medidas</h3>
+            <p class="text-xs text-slate-400">Personalize a data da meta, o peso-alvo e as medidas desejadas</p>
+          </div>
+        </div>
+        <button onclick="closeGoalModal()" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <form id="goalForm" onsubmit="saveGoalForm(event)" class="mt-4 space-y-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-amber-500/10 border border-amber-500/30 p-4 rounded-xl">
+          <div>
+            <label class="block text-xs font-bold uppercase text-amber-300 mb-1">Data da Meta *</label>
+            <input type="date" id="goalDataInput" required class="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm font-bold focus:outline-none focus:border-amber-400" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold uppercase text-emerald-400 mb-1">Meta de Peso Nu (kg) *</label>
+            <input type="number" step="0.01" id="goalPesoInput" required class="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-emerald-500/50 text-white text-base font-extrabold focus:outline-none focus:border-emerald-400" />
+          </div>
+        </div>
+
+        <div>
+          <span class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Metas de Medidas Corporais (cm)</span>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Braço (cm)</label>
+              <input type="number" step="0.1" id="goalBraco" required class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm font-semibold" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Antebraço (cm)</label>
+              <input type="number" step="0.1" id="goalAntebraco" required class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm font-semibold" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Coxa (cm)</label>
+              <input type="number" step="0.1" id="goalCoxa" required class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm font-semibold" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Panturrilha (cm)</label>
+              <input type="number" step="0.1" id="goalPanturrilha" required class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm font-semibold" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Quadril (cm)</label>
+              <input type="number" step="0.1" id="goalQuadril" required class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm font-semibold" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Barriga (cm)</label>
+              <input type="number" step="0.1" id="goalBarriga" required class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm font-semibold" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Abdômen (cm)</label>
+              <input type="number" step="0.1" id="goalAbdomen" required class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm font-semibold" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Peitoral (cm)</label>
+              <input type="number" step="0.1" id="goalPeitoral" required class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm font-semibold" />
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
+          <button type="button" onclick="closeGoalModal()" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs sm:text-sm font-semibold">
+            Cancelar
+          </button>
+          <button type="submit" class="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs sm:text-sm font-bold shadow-lg flex items-center gap-2">
+            <i class="fa-solid fa-floppy-disk"></i>
+            <span>Salvar Meta</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- MODAL 3: SINCRONIZAR PC & CELULAR / GITHUB PAGES / BACKUP -->
+  <!-- ===================================================================== -->
+  <div id="syncModal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-2xl w-full p-5 sm:p-6 shadow-2xl my-auto space-y-5">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-sky-500/20 border border-sky-500/40 flex items-center justify-center text-sky-400">
+            <i class="fa-solid fa-cloud"></i>
+          </div>
+          <div>
+            <h3 class="text-lg font-bold text-white">Sincronização (PC + Celular) & GitHub</h3>
+            <p class="text-xs text-slate-400">Mantenha seus dados sempre atualizados entre o computador e o smartphone</p>
+          </div>
+        </div>
+        <button onclick="closeSyncModal()" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Cloud Sync Status -->
+      <div class="bg-slate-800/60 border border-slate-700 rounded-xl p-4 space-y-2">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+            <i class="fa-solid fa-circle-check"></i> Sincronização Automática em Nuvem
+          </span>
+          <span id="modalCloudBadge" class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/20 text-emerald-300">Ativa</span>
+        </div>
+        <p class="text-xs text-slate-300 leading-relaxed">
+          Seus registros e metas são sincronizados automaticamente em tempo real. Além disso, para publicar no <strong>GitHub Pages</strong> e alimentar pelo PC e Celular usando sua própria Planilha Google gratuita, você pode conectar uma URL do Google Apps Script abaixo:
+        </p>
+      </div>
+
+      <!-- Optional Google Apps Script Webhook for GitHub Pages -->
+      <div class="bg-slate-800/40 border border-slate-700/80 rounded-xl p-4 space-y-3">
+        <div class="flex items-center justify-between">
+          <label class="text-xs font-bold uppercase text-sky-300 flex items-center gap-1.5">
+            <i class="fa-brands fa-google-drive"></i>
+            <span>Integração Google Sheets (Para GitHub Pages)</span>
+          </label>
+          <button type="button" onclick="toggleAppsScriptHelp()" class="text-xs text-sky-400 underline hover:text-sky-300 font-semibold">
+            Ver código de 1 minuto
+          </button>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-2">
+          <input type="url" id="webhookUrlInput" placeholder="https://script.google.com/macros/s/.../exec" class="flex-1 px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs focus:outline-none focus:border-sky-500" />
+          <button type="button" onclick="saveWebhookUrl()" class="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold transition">
+            Conectar & Sincronizar
+          </button>
+        </div>
+
+        <!-- Expandable instructions for Google Sheets Apps Script -->
+        <div id="appsScriptHelpBox" class="hidden bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-300 space-y-2">
+          <p class="font-semibold text-white">Como conectar ao Google Planilhas (100% gratuito no GitHub Pages):</p>
+          <ol class="list-decimal list-inside space-y-1 text-slate-400">
+            <li>Crie uma Planilha Google em branco e clique em <strong>Extensões &gt; Apps Script</strong>.</li>
+            <li>Cole o código abaixo, clique em <strong>Implantar &gt; Nova implantação &gt; App da Web</strong> (Acesso: <em>Qualquer pessoa</em>).</li>
+            <li>Copie a URL gerada e cole no campo acima (no PC e no Celular).</li>
+          </ol>
+          <div class="relative">
+            <pre id="appsScriptCode" class="bg-slate-900 p-2.5 rounded-lg text-[11px] text-emerald-300 overflow-x-auto">function doGet() {
+  var prop = PropertiesService.getScriptProperties().getProperty('ALAN_DATA');
+  return ContentService.createTextOutput(prop || '{}').setMimeType(ContentService.MimeType.JSON);
+}
+function doPost(e) {
+  PropertiesService.getScriptProperties().setProperty('ALAN_DATA', e.postData.contents);
+  return ContentService.createTextOutput('{"ok":true}').setMimeType(ContentService.MimeType.JSON);
+}</pre>
+            <button type="button" onclick="copyAppsScriptCode()" class="absolute top-2 right-2 px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-[10px] font-bold">
+              Copiar Código
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Export / Import / Restore Default Data -->
+      <div class="space-y-2">
+        <span class="block text-xs font-bold uppercase tracking-wider text-slate-400">Exportar, Importar e Backup da Planilha</span>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+          <button type="button" onclick="exportToCSV()" class="p-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-left flex items-center gap-3 transition">
+            <i class="fa-solid fa-file-csv text-emerald-400 text-xl"></i>
+            <div>
+              <div class="text-xs font-bold text-white">Baixar Planilha (.CSV)</div>
+              <div class="text-[11px] text-slate-400">Abre direto no Excel</div>
+            </div>
+          </button>
+
+          <button type="button" onclick="exportToJSON()" class="p-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-left flex items-center gap-3 transition">
+            <i class="fa-solid fa-download text-sky-400 text-xl"></i>
+            <div>
+              <div class="text-xs font-bold text-white">Exportar Backup (.JSON)</div>
+              <div class="text-[11px] text-slate-400">Salvar cópia completa</div>
+            </div>
+          </button>
+
+          <label class="p-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-left flex items-center gap-3 cursor-pointer transition">
+            <i class="fa-solid fa-upload text-amber-400 text-xl"></i>
+            <div>
+              <div class="text-xs font-bold text-white">Importar Backup (.JSON)</div>
+              <div class="text-[11px] text-slate-400">Carregar de outro aparelho</div>
+            </div>
+            <input type="file" accept=".json" onchange="importFromJSON(event)" class="hidden" />
+          </label>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-800">
+        <button type="button" onclick="openRestoreConfirmModal()" class="text-xs text-rose-400 hover:text-rose-300 font-semibold flex items-center gap-1.5">
+          <i class="fa-solid fa-rotate-left"></i>
+          <span>Restaurar dados originais da planilha</span>
+        </button>
+        <button type="button" onclick="closeSyncModal()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold">
+          Fechar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- MODAL 4: CONFIRMAÇÃO DE EXCLUSÃO / RESTAURAÇÃO (NO BROWSER ALERTS) -->
+  <!-- ===================================================================== -->
+  <div id="confirmModal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full p-5 shadow-2xl space-y-4">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-rose-500/20 border border-rose-500/40 flex items-center justify-center text-rose-400">
+          <i class="fa-solid fa-triangle-exclamation text-lg"></i>
+        </div>
+        <div>
+          <h4 id="confirmModalTitle" class="text-base font-bold text-white">Confirmar Ação</h4>
+          <p id="confirmModalMessage" class="text-xs text-slate-400 mt-0.5">Tem certeza que deseja realizar esta ação?</p>
+        </div>
+      </div>
+      <div class="flex items-center justify-end gap-2.5 pt-2">
+        <button type="button" onclick="closeConfirmModal()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold">
+          Cancelar
+        </button>
+        <button type="button" id="confirmModalActionBtn" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold">
+          Confirmar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="toastContainer" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 pointer-events-none flex flex-col items-center gap-2"></div>
+
+  <!-- ===================================================================== -->
+  <!-- APPLICATION LOGIC & FIREBASE CLOUD SYNC -->
+  <!-- ===================================================================== -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // -----------------------------------------------------------------------
+    // 1. INITIAL DATA FROM ALAN'S SPREADSHEET
+    // -----------------------------------------------------------------------
+    const INITIAL_GOAL = {
+      dataMeta: "2026-12-31",
+      peso: 93.00,
+      braco: 35,
+      antebraco: 27,
+      coxa: 65,
+      panturrilha: 41,
+      quadril: 109,
+      barriga: 109,
+      abdomen: 95,
+      peitoral: 113
+    };
+
+    const INITIAL_RECORDS = [
+      {
+        id: "reg-2026-10-06",
+        data: "2026-10-06",
+        hora: "19:00",
+        peso: 100.00,
+        braco: 36,
+        antebraco: 27,
+        coxa: 68,
+        panturrilha: 45,
+        quadril: 115,
+        barriga: 115,
+        abdomen: 105,
+        peitoral: 116
+      },
+      {
+        id: "reg-2026-10-13",
+        data: "2026-10-13",
+        hora: "13:58",
+        peso: 99.05,
+        braco: 35,
+        antebraco: 27,
+        coxa: 67,
+        panturrilha: 43,
+        quadril: 112,
+        barriga: 112,
+        abdomen: 105,
+        peitoral: 115
+      },
+      {
+        id: "reg-2026-10-20",
+        data: "2026-10-20",
+        hora: "21:50",
+        peso: 100.60,
+        braco: 36,
+        antebraco: 28,
+        coxa: 66,
+        panturrilha: 42,
+        quadril: 113,
+        barriga: 112,
+        abdomen: 105,
+        peitoral: 116
+      },
+      {
+        id: "reg-2026-10-27",
+        data: "2026-10-27",
+        hora: "10:28",
+        peso: 98.85,
+        braco: 36,
+        antebraco: 28,
+        coxa: 67,
+        panturrilha: 44,
+        quadril: 113,
+        barriga: 112,
+        abdomen: 104,
+        peitoral: 115
+      },
+      {
+        id: "reg-2026-11-03",
+        data: "2026-11-03",
+        hora: "10:27",
+        peso: 98.15,
+        braco: 35,
+        antebraco: 30,
+        coxa: 65,
+        panturrilha: 44,
+        quadril: 113,
+        barriga: 110,
+        abdomen: 105,
+        peitoral: 114
+      }
+    ];
+
+    const MEASUREMENT_KEYS = [
+      { key: "braco", label: "Braço" },
+      { key: "antebraco", label: "Antebraço" },
+      { key: "coxa", label: "Coxa" },
+      { key: "panturrilha", label: "Panturrilha" },
+      { key: "quadril", label: "Quadril" },
+      { key: "barriga", label: "Barriga" },
+      { key: "abdomen", label: "Abdômen" },
+      { key: "peitoral", label: "Peitoral" }
+    ];
+
+    // -----------------------------------------------------------------------
+    // 2. APPLICATION STATE
+    // -----------------------------------------------------------------------
+    let appState = {
+      goal: structuredClone(INITIAL_GOAL),
+      records: structuredClone(INITIAL_RECORDS),
+      webhookUrl: ""
+    };
+
+    let inlineEditMode = false;
+    let currentViewMode = "table"; // 'table' or 'cards'
+    let db = null;
+    let auth = null;
+    let currentUser = null;
+    let appId = typeof __app_id !== "undefined" ? __app_id : "controle-peso-alan";
+
+    // -----------------------------------------------------------------------
+    // 3. FORMATTING HELPERS
+    // -----------------------------------------------------------------------
+    function formatWeight(val) {
+      const num = Number(val);
+      if (isNaN(num)) return "0,00";
+      return num.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function formatMeasure(val) {
+      const num = Number(val);
+      if (isNaN(num)) return "0";
+      return Number.isInteger(num)
+        ? num.toString()
+        : num.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    }
+
+    function formatDateBR(isoDate) {
+      if (!isoDate) return "--/--/----";
+      const parts = isoDate.split("-");
+      if (parts.length !== 3) return isoDate;
+      return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+
+    function sortRecordsChronologically(recordsList) {
+      return [...recordsList].sort((a, b) => {
+        const dtA = `${a.data || ""}T${a.hora || "00:00"}`;
+        const dtB = `${b.data || ""}T${b.hora || "00:00"}`;
+        return dtA.localeCompare(dtB);
+      });
+    }
+
+    function showToast(message, type = "success") {
+      const container = document.getElementById("toastContainer");
+      const toast = document.createElement("div");
+      const bgClass =
+        type === "success"
+          ? "bg-emerald-600 border-emerald-400 text-white"
+          : type === "warning"
+          ? "bg-amber-500 border-amber-300 text-slate-950"
+          : "bg-rose-600 border-rose-400 text-white";
+
+      toast.className = `px-4 py-2.5 rounded-xl border shadow-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all duration-300 ${bgClass}`;
+      toast.innerHTML = `<i class="fa-solid ${type === "success" ? "fa-circle-check" : "fa-circle-info"}"></i><span>${message}</span>`;
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.opacity = "0";
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    // -----------------------------------------------------------------------
+    // 4. CLOUD PERSISTENCE (FIREBASE FIRESTORE + WEBHOOK SYNC)
+    // -----------------------------------------------------------------------
+    async function initCloudSync() {
+      try {
+        if (typeof __firebase_config !== "undefined" && __firebase_config) {
+          const firebaseConfig = JSON.parse(__firebase_config);
+          const app = initializeApp(firebaseConfig);
+          auth = getAuth(app);
+          db = getFirestore(app);
+
+          // RULE 3: Authenticate FIRST before any Firestore operation
+          if (typeof __initial_auth_token !== "undefined" && __initial_auth_token) {
+            await signInWithCustomToken(auth, __initial_auth_token);
+          } else {
+            await signInAnonymously(auth);
+          }
+          currentUser = auth.currentUser;
+
+          if (!currentUser) return;
+
+          // RULE 1: Strict Path `/artifacts/{appId}/public/data/{collectionName}`
+          const docRef = doc(db, "artifacts", appId, "public", "data", "alan_weight_records", "main_sheet");
+
+          onSnapshot(
+            docRef,
+            async (snapshot) => {
+              if (snapshot.exists()) {
+                const data = snapshot.data();
+                if (data && data.goal && Array.isArray(data.records)) {
+                  appState.goal = data.goal;
+                  appState.records = sortRecordsChronologically(data.records);
+                  if (data.webhookUrl) {
+                    appState.webhookUrl = data.webhookUrl;
+                    const whInput = document.getElementById("webhookUrlInput");
+                    if (whInput) whInput.value = data.webhookUrl;
+                  }
+                  updateSyncUI("Sincronizado em Nuvem (PC & Celular)", true);
+                  renderAll();
+                }
+              } else {
+                // First run: seed Firestore with Alan's spreadsheet data
+                await persistStateToCloud(false);
+              }
+            },
+            (error) => {
+              console.error("Erro na leitura em tempo real:", error);
+              updateSyncUI("Modo Offline Ativo", false);
+            }
+          );
+        } else {
+          updateSyncUI("Pronto (GitHub Pages / Memória)", true);
+        }
+      } catch (err) {
+        console.error("Aviso ao inicializar nuvem:", err);
+        updateSyncUI("Modo Local Ativo", false);
+      }
+    }
+
+    function updateSyncUI(text, isOnline) {
+      const statusText = document.getElementById("syncStatusText");
+      const badge = document.getElementById("modalCloudBadge");
+      if (statusText) statusText.textContent = text;
+      if (badge) {
+        badge.textContent = isOnline ? "Conectado" : "Local";
+      }
+    }
+
+    async function persistStateToCloud(showNotification = true) {
+      appState.records = sortRecordsChronologically(appState.records);
+      renderAll();
+
+      // 1. Save to Firestore if authenticated
+      if (db && currentUser) {
+        try {
+          const docRef = doc(db, "artifacts", appId, "public", "data", "alan_weight_records", "main_sheet");
+          await setDoc(docRef, {
+            goal: appState.goal,
+            records: appState.records,
+            webhookUrl: appState.webhookUrl || "",
+            updatedAt: new Date().toISOString()
+          });
+          updateSyncUI("Salvo na Nuvem", true);
+        } catch (err) {
+          console.error("Erro ao salvar no Firestore:", err);
+        }
+      }
+
+      // 2. Also sync with Google Apps Script Webhook if configured
+      if (appState.webhookUrl && appState.webhookUrl.startsWith("http")) {
+        try {
+          await fetch(appState.webhookUrl, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({
+              goal: appState.goal,
+              records: appState.records,
+              updatedAt: new Date().toISOString()
+            })
+          });
+        } catch (e) {
+          console.error("Falha ao enviar para Google Sheets:", e);
+        }
+      }
+
+      if (showNotification) {
+        showToast("Dados atualizados e salvos!");
+      }
+    }
+
+    // -----------------------------------------------------------------------
+    // 5. RENDER DASHBOARD, GOAL HERO, TABLE, CARDS & CHARTS
+    // -----------------------------------------------------------------------
+    function renderAll() {
+      appState.records = sortRecordsChronologically(appState.records);
+      renderHeroGoal();
+      renderTableAndCards();
+      renderCharts();
+    }
+
+    function renderHeroGoal() {
+      const goal = appState.goal;
+      const records = appState.records;
+      const firstRec = records.length > 0 ? records[0] : null;
+      const lastRec = records.length > 0 ? records[records.length - 1] : null;
+      const prevRec = records.length > 1 ? records[records.length - 2] : null;
+
+      // Goal Date & Weight
+      document.getElementById("goalDateDisplay").textContent = formatDateBR(goal.dataMeta);
+      document.getElementById("goalDateShortLabel").textContent = formatDateBR(goal.dataMeta);
+      document.getElementById("goalWeightDisplay").innerHTML = `${formatWeight(goal.peso)} <small class="text-2xl font-bold text-emerald-400">kg</small>`;
+      document.getElementById("targetWeightBarLabel").textContent = `${formatWeight(goal.peso)} kg`;
+      document.getElementById("chartGoalWeightText").textContent = `${formatWeight(goal.peso)} kg`;
+      document.getElementById("chartBadgeGoal").textContent = `${formatWeight(goal.peso)} kg`;
+
+      // Days remaining calculation
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const targetDate = new Date(`${goal.dataMeta}T00:00:00`);
+      const diffTime = targetDate - today;
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      const daysBadge = document.getElementById("daysRemainingBadge");
+      if (diffDays > 0) {
+        daysBadge.textContent = `Faltam ${diffDays} dias`;
+      } else if (diffDays === 0) {
+        daysBadge.textContent = `Meta é hoje!`;
+      } else {
+        daysBadge.textContent = `Prazo concluído`;
+      }
+
+      if (firstRec && lastRec) {
+        const initialW = Number(firstRec.peso);
+        const currentW = Number(lastRec.peso);
+        const goalW = Number(goal.peso);
+
+        document.getElementById("initialWeightLabel").textContent = `${formatWeight(initialW)} kg`;
+        document.getElementById("currentWeightCard").textContent = formatWeight(currentW);
+        document.getElementById("lastRecordDateCard").textContent = `Em ${formatDateBR(lastRec.data)} às ${lastRec.hora}`;
+
+        // Total Eliminated since first record
+        const totalDiff = currentW - initialW;
+        const totalLostEl = document.getElementById("totalLostCard");
+        totalLostEl.textContent = `${totalDiff > 0 ? "+" : ""}${formatWeight(totalDiff)}`;
+        totalLostEl.className = `text-2xl sm:text-3xl font-extrabold ${totalDiff <= 0 ? "text-emerald-400" : "text-rose-400"}`;
+
+        // Last weigh-in delta
+        if (prevRec) {
+          const lastDelta = currentW - Number(prevRec.peso);
+          const sign = lastDelta > 0 ? "+" : "";
+          document.getElementById("lastDeltaCard").textContent = `Última pesagem: ${sign}${formatWeight(lastDelta)} kg`;
+        } else {
+          document.getElementById("lastDeltaCard").textContent = `Primeira medição registrada`;
+        }
+
+        // Remaining to Goal
+        const remaining = currentW - goalW;
+        const remEl = document.getElementById("remainingToGoalCard");
+        const remSub = document.getElementById("remainingTargetSubtext");
+        if (remaining > 0) {
+          remEl.textContent = formatWeight(remaining);
+          remSub.textContent = `Para atingir ${formatWeight(goalW)} kg`;
+        } else {
+          remEl.textContent = "META BATIDA!";
+          remSub.textContent = `Abaixo de ${formatWeight(goalW)} kg`;
+        }
+
+        // Progress Bar Percentage
+        const totalToLose = initialW - goalW;
+        let pct = 0;
+        if (totalToLose > 0) {
+          pct = ((initialW - currentW) / totalToLose) * 100;
+        } else if (currentW <= goalW) {
+          pct = 100;
+        }
+        const clampedPct = Math.max(0, Math.min(100, pct));
+        document.getElementById("goalProgressBar").style.width = `${clampedPct.toFixed(1)}%`;
+        document.getElementById("goalProgressPercentLabel").textContent = `${clampedPct.toFixed(1).replace(".", ",")}% da meta concluída`;
+
+        // Weekly pace suggestion
+        const paceEl = document.getElementById("weeklyPaceText");
+        if (remaining > 0 && diffDays > 0) {
+          const weeksLeft = Math.max(1, diffDays / 7);
+          const kgPerWeek = remaining / weeksLeft;
+          paceEl.innerHTML = `<i class="fa-solid fa-bolt text-amber-400 mr-1"></i> Ritmo necessário até ${formatDateBR(goal.dataMeta)}: <strong>-${formatWeight(kgPerWeek)} kg/semana</strong>`;
+        } else if (remaining <= 0) {
+          paceEl.innerHTML = `<i class="fa-solid fa-star text-amber-400 mr-1"></i> Parabéns, Alan! Você já alcançou a meta de peso!`;
+        } else {
+          paceEl.textContent = "";
+        }
+      }
+
+      // Render 8 Body Measurements Goal Cards
+      const grid = document.getElementById("measurementsGoalGrid");
+      grid.innerHTML = "";
+      MEASUREMENT_KEYS.forEach(({ key, label }) => {
+        const targetVal = Number(goal[key]);
+        const currentVal = lastRec ? Number(lastRec[key]) : 0;
+        const initialVal = firstRec ? Number(firstRec[key]) : 0;
+        const diffToGoal = currentVal - targetVal;
+        const diffFromStart = currentVal - initialVal;
+
+        const isReached = diffToGoal <= 0;
+        const statusColor = isReached
+          ? "border-emerald-500/40 bg-emerald-950/25"
+          : "border-slate-700/80 bg-slate-900/70";
+
+        const card = document.createElement("div");
+        card.className = `rounded-xl p-2.5 border ${statusColor} flex flex-col justify-between transition hover:border-emerald-500/50 cursor-pointer`;
+        card.onclick = () => openGoalModal();
+        card.title = "Clique para editar a meta desta medida";
+
+        card.innerHTML = `
+          <div class="flex items-center justify-between text-[11px] font-bold text-slate-400 uppercase">
+            <span>${label}</span>
+            ${
+              isReached
+                ? '<span class="text-emerald-400" title="Meta atingida!"><i class="fa-solid fa-check-circle"></i></span>'
+                : `<span class="text-amber-300">-${formatMeasure(diffToGoal)} cm</span>`
+            }
+          </div>
+          <div class="my-1 flex items-baseline justify-between">
+            <div>
+              <span class="text-base sm:text-lg font-extrabold text-white">${formatMeasure(currentVal)}</span>
+              <span class="text-[10px] text-slate-400">cm</span>
+            </div>
+            <div class="text-[11px] text-emerald-400 font-semibold">
+              Meta: ${formatMeasure(targetVal)}
+            </div>
+          </div>
+          <div class="text-[10px] text-slate-400 flex items-center justify-between border-t border-slate-800/80 pt-1">
+            <span>Início: ${formatMeasure(initialVal)}</span>
+            <span class="${diffFromStart <= 0 ? "text-emerald-400" : "text-rose-400"} font-semibold">
+              ${diffFromStart > 0 ? "+" : ""}${formatMeasure(diffFromStart)} cm
+            </span>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    // -----------------------------------------------------------------------
+    // 6. RENDER SPREADSHEET TABLE (WITH INLINE EDITING) & MOBILE CARDS
+    // -----------------------------------------------------------------------
+    function renderTableAndCards() {
+      const records = appState.records;
+      const goal = appState.goal;
+      document.getElementById("recordsCountBadge").textContent = `${records.length} ${records.length === 1 ? "registro" : "registros"}`;
+
+      const tbody = document.getElementById("recordsTableBody");
+      const tfoot = document.getElementById("recordsTableFooter");
+      const cardsContainer = document.getElementById("cardsViewContainer");
+
+      tbody.innerHTML = "";
+      cardsContainer.innerHTML = "";
+
+      records.forEach((rec, idx) => {
+        const prev = idx > 0 ? records[idx - 1] : null;
+        const weightDiff = prev ? Number(rec.peso) - Number(prev.peso) : 0;
+
+        // Weight badge comparing with previous row
+        let weightDeltaBadge = "";
+        if (prev && Math.abs(weightDiff) >= 0.01) {
+          const isLoss = weightDiff < 0;
+          weightDeltaBadge = `
+            <span class="ml-1 px-1.5 py-0.5 rounded text-[10px] font-bold ${
+              isLoss ? "bg-emerald-500/20 text-emerald-300" : "bg-rose-500/20 text-rose-300"
+            }">
+              ${weightDiff > 0 ? "+" : ""}${formatWeight(weightDiff)}
+            </span>
+          `;
+        }
+
+        const tr = document.createElement("tr");
+        tr.className = "hover:bg-slate-800/60 transition group bg-slate-900/80";
+
+        if (inlineEditMode) {
+          // Direct inline editable cells (like Excel)
+          tr.innerHTML = `
+            <td class="py-2 px-2 sticky-col bg-slate-900">
+              <input type="date" value="${rec.data}" onchange="updateRecordField('${rec.id}', 'data', this.value)" class="px-2 py-1 rounded bg-slate-950 border border-amber-500/40 text-white text-xs font-semibold w-32" />
+            </td>
+            <td class="py-2 px-2 text-center">
+              <input type="time" value="${rec.hora}" onchange="updateRecordField('${rec.id}', 'hora', this.value)" class="px-2 py-1 rounded bg-slate-950 border border-amber-500/40 text-white text-xs font-semibold w-24 text-center" />
+            </td>
+            <td class="py-2 px-2 text-center bg-emerald-950/30 border-x border-slate-800">
+              <input type="number" step="0.01" value="${rec.peso}" onchange="updateRecordField('${rec.id}', 'peso', this.value)" class="px-2 py-1 rounded bg-slate-950 border border-emerald-500 text-emerald-300 text-xs font-extrabold w-24 text-center" />
+            </td>
+            ${MEASUREMENT_KEYS.map(
+              (m) => `
+              <td class="py-2 px-1.5 text-center">
+                <input type="number" step="0.1" value="${rec[m.key]}" onchange="updateRecordField('${rec.id}', '${m.key}', this.value)" class="px-1.5 py-1 rounded bg-slate-950 border border-slate-700 focus:border-amber-400 text-white text-xs font-semibold w-16 text-center" />
+              </td>
+            `
+            ).join("")}
+            <td class="py-2 px-2 text-center">
+              <button onclick="confirmDeleteRecord('${rec.id}')" class="p-1.5 rounded-lg bg-rose-500/15 hover:bg-rose-500/30 text-rose-400 transition" title="Excluir registro">
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
+            </td>
+          `;
+        } else {
+          // Normal formatted spreadsheet row
+          tr.innerHTML = `
+            <td class="py-3 px-3 font-bold text-white whitespace-nowrap sticky-col bg-slate-900 group-hover:bg-slate-800">
+              ${formatDateBR(rec.data)}
+            </td>
+            <td class="py-3 px-2.5 text-center text-slate-300 whitespace-nowrap">${rec.hora}</td>
+            <td class="py-3 px-3 text-center font-extrabold text-white bg-emerald-950/25 border-x border-slate-800 whitespace-nowrap">
+              <span>${formatWeight(rec.peso)}</span>
+              ${weightDeltaBadge}
+            </td>
+            ${MEASUREMENT_KEYS.map((m) => {
+              const currVal = Number(rec[m.key]);
+              const prevVal = prev ? Number(prev[m.key]) : currVal;
+              const diffM = currVal - prevVal;
+              let deltaDot = "";
+              if (prev && diffM !== 0) {
+                deltaDot = `<sup class="ml-0.5 text-[10px] font-bold ${diffM < 0 ? "text-emerald-400" : "text-amber-400"}">${diffM > 0 ? "+" : ""}${formatMeasure(diffM)}</sup>`;
+              }
+              return `<td class="py-3 px-2.5 text-center text-slate-200 font-medium whitespace-nowrap">${formatMeasure(currVal)}${deltaDot}</td>`;
+            }).join("")}
+            <td class="py-3 px-3 text-center whitespace-nowrap">
+              <div class="inline-flex items-center gap-1.5">
+                <button onclick="openRecordModal('${rec.id}')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-emerald-600 text-slate-200 hover:text-white text-xs font-semibold transition flex items-center gap-1" title="Editar este registro">
+                  <i class="fa-solid fa-pen"></i>
+                  <span>Editar</span>
+                </button>
+                <button onclick="confirmDeleteRecord('${rec.id}')" class="p-1.5 rounded-lg bg-slate-800 hover:bg-rose-600 text-slate-400 hover:text-white text-xs transition" title="Excluir este registro">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </div>
+            </td>
+          `;
+        }
+        tbody.appendChild(tr);
+
+        // Mobile Card Item
+        const card = document.createElement("div");
+        card.className = "rounded-xl bg-slate-900/90 border border-slate-700/80 p-4 space-y-3";
+        card.innerHTML = `
+          <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+            <div>
+              <div class="text-sm font-extrabold text-white flex items-center gap-2">
+                <i class="fa-regular fa-calendar text-emerald-400"></i>
+                <span>${formatDateBR(rec.data)}</span>
+                <span class="text-xs font-medium text-slate-400">às ${rec.hora}</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="openRecordModal('${rec.id}')" class="px-3 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold flex items-center gap-1">
+                <i class="fa-solid fa-pen"></i> Editar
+              </button>
+              <button onclick="confirmDeleteRecord('${rec.id}')" class="p-1.5 rounded-lg bg-rose-500/15 text-rose-400 text-xs">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between bg-emerald-950/30 border border-emerald-500/30 rounded-xl px-3.5 py-2">
+            <span class="text-xs font-bold uppercase text-emerald-300">Peso Nu</span>
+            <div class="flex items-center gap-2">
+              <span class="text-xl font-black text-white">${formatWeight(rec.peso)} kg</span>
+              ${weightDeltaBadge}
+            </div>
+          </div>
+
+          <div class="grid grid-cols-4 gap-2 text-center">
+            ${MEASUREMENT_KEYS.map(
+              (m) => `
+              <div class="bg-slate-800/70 rounded-lg p-1.5 border border-slate-700/60">
+                <div class="text-[10px] text-slate-400 font-semibold truncate">${m.label}</div>
+                <div class="text-xs font-bold text-white">${formatMeasure(rec[m.key])} <span class="text-[9px] text-slate-400">cm</span></div>
+              </div>
+            `
+            ).join("")}
+          </div>
+        `;
+        cardsContainer.appendChild(card);
+      });
+
+      // Footer Rows: META 31/12/2026 & DIFERENÇA ATUAL
+      const lastRec = records.length > 0 ? records[records.length - 1] : null;
+      const diffPeso = lastRec ? Number(lastRec.peso) - Number(goal.peso) : 0;
+
+      tfoot.innerHTML = `
+        <!-- Goal Row matching the spreadsheet -->
+        <tr class="bg-emerald-950/40 text-emerald-300 font-extrabold">
+          <td class="py-3.5 px-3 sticky-col bg-slate-900 border-t border-emerald-500/40">
+            <div class="flex items-center gap-1.5">
+              <i class="fa-solid fa-bullseye text-amber-400"></i>
+              <span>META ${formatDateBR(goal.dataMeta)}</span>
+            </div>
+          </td>
+          <td class="py-3.5 px-2.5 text-center text-slate-400">--:--</td>
+          <td class="py-3.5 px-3 text-center text-base text-emerald-300 bg-emerald-900/40 border-x border-emerald-500/30">
+            ${formatWeight(goal.peso)}
+          </td>
+          ${MEASUREMENT_KEYS.map(
+            (m) => `<td class="py-3.5 px-2.5 text-center text-emerald-300">${formatMeasure(goal[m.key])}</td>`
+          ).join("")}
+          <td class="py-3.5 px-3 text-center">
+            <button onclick="openGoalModal()" class="px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-bold transition">
+              <i class="fa-solid fa-pen mr-1"></i> Editar Meta
+            </button>
+          </td>
+        </tr>
+        ${
+          lastRec
+            ? `
+        <tr class="bg-slate-950/90 text-slate-300 font-semibold text-xs border-t border-slate-800">
+          <td class="py-2.5 px-3 sticky-col bg-slate-950 text-slate-400">FALTA P/ META</td>
+          <td class="py-2.5 px-2.5 text-center">--</td>
+          <td class="py-2.5 px-3 text-center font-bold ${diffPeso > 0 ? "text-amber-300" : "text-emerald-400"} border-x border-slate-800">
+            ${diffPeso > 0 ? `-${formatWeight(diffPeso)} kg` : "Atingida!"}
+          </td>
+          ${MEASUREMENT_KEYS.map((m) => {
+            const d = Number(lastRec[m.key]) - Number(goal[m.key]);
+            return `<td class="py-2.5 px-2.5 text-center ${d > 0 ? "text-amber-300" : "text-emerald-400"}">
+              ${d > 0 ? `-${formatMeasure(d)}` : "OK"}
+            </td>`;
+          }).join("")}
+          <td class="py-2.5 px-3 text-center text-[11px] text-slate-500">Atual vs Meta</td>
+        </tr>
+        `
+            : ""
+        }
+      `;
+    }
+
+    // -----------------------------------------------------------------------
+    // 7. CUSTOM INTERACTIVE CANVAS CHARTS (WEIGHT & BODY MEASUREMENTS)
+    // -----------------------------------------------------------------------
+    function renderCharts() {
+      drawLineChart({
+        canvasId: "weightChartCanvas",
+        records: appState.records,
+        fieldKey: "peso",
+        goalValue: Number(appState.goal.peso),
+        unit: "kg",
+        lineColor: "#10b981",
+        goalColor: "#f59e0b",
+        isWeight: true
+      });
+
+      const selectEl = document.getElementById("selectedMeasurementChart");
+      const measureKey = selectEl ? selectEl.value : "barriga";
+      drawLineChart({
+        canvasId: "measureChartCanvas",
+        records: appState.records,
+        fieldKey: measureKey,
+        goalValue: Number(appState.goal[measureKey]),
+        unit: "cm",
+        lineColor: "#38bdf8",
+        goalColor: "#10b981",
+        isWeight: false
+      });
+    }
+
+    function drawLineChart({ canvasId, records, fieldKey, goalValue, unit, lineColor, goalColor, isWeight }) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+
+      const rect = canvas.parentElement.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      const width = Math.max(280, rect.width - 24);
+      const height = Math.max(200, rect.height - 24);
+
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
+      ctx.scale(dpr, dpr);
+
+      ctx.clearRect(0, 0, width, height);
+
+      if (!records || records.length === 0) {
+        ctx.fillStyle = "#94a3b8";
+        ctx.font = "13px Inter, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("Nenhum registro para exibir no gráfico.", width / 2, height / 2);
+        return;
+      }
+
+      const values = records.map((r) => Number(r[fieldKey]));
+      const allVals = [...values, goalValue];
+      const minVal = Math.min(...allVals);
+      const maxVal = Math.max(...allVals);
+      const paddingVal = Math.max(1.5, (maxVal - minVal) * 0.2);
+      const yMin = minVal - paddingVal;
+      const yMax = maxVal + paddingVal;
+
+      const padLeft = 48;
+      const padRight = 22;
+      const padTop = 24;
+      const padBottom = 34;
+      const plotW = width - padLeft - padRight;
+      const plotH = height - padTop - padBottom;
+
+      const getX = (index) => {
+        if (records.length === 1) return padLeft + plotW / 2;
+        return padLeft + (index / (records.length - 1)) * plotW;
+      };
+      const getY = (val) => {
+        return padTop + plotH - ((val - yMin) / (yMax - yMin)) * plotH;
+      };
+
+      // Horizontal Grid Lines
+      ctx.strokeStyle = "rgba(148, 163, 184, 0.12)";
+      ctx.lineWidth = 1;
+      const steps = 4;
+      for (let i = 0; i <= steps; i++) {
+        const y = padTop + (i / steps) * plotH;
+        const val = yMax - (i / steps) * (yMax - yMin);
+        ctx.beginPath();
+        ctx.moveTo(padLeft, y);
+        ctx.lineTo(width - padRight, y);
+        ctx.stroke();
+
+        ctx.fillStyle = "#64748b";
+        ctx.font = "10px Inter, sans-serif";
+        ctx.textAlign = "right";
+        ctx.fillText(isWeight ? val.toFixed(1).replace(".", ",") : Math.round(val).toString(), padLeft - 8, y + 3);
+      }
+
+      // Goal Dashed Line (Meta 31/12/2026)
+      const goalY = getY(goalValue);
+      ctx.save();
+      ctx.strokeStyle = goalColor;
+      ctx.lineWidth = 1.8;
+      ctx.setLineDash([6, 4]);
+      ctx.beginPath();
+      ctx.moveTo(padLeft, goalY);
+      ctx.lineTo(width - padRight, goalY);
+      ctx.stroke();
+
+      ctx.fillStyle = goalColor;
+      ctx.font = "bold 10px Inter, sans-serif";
+      ctx.textAlign = "right";
+      const formattedGoal = isWeight ? formatWeight(goalValue) : formatMeasure(goalValue);
+      ctx.fillText(`META: ${formattedGoal} ${unit}`, width - padRight - 4, goalY - 6);
+      ctx.restore();
+
+      // Area Gradient under data line
+      const grad = ctx.createLinearGradient(0, padTop, 0, padTop + plotH);
+      grad.addColorStop(0, isWeight ? "rgba(16, 185, 129, 0.30)" : "rgba(56, 189, 248, 0.30)");
+      grad.addColorStop(1, "rgba(15, 23, 42, 0.0)");
+
+      ctx.beginPath();
+      records.forEach((r, idx) => {
+        const x = getX(idx);
+        const y = getY(Number(r[fieldKey]));
+        if (idx === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.lineTo(getX(records.length - 1), padTop + plotH);
+      ctx.lineTo(getX(0), padTop + plotH);
+      ctx.closePath();
+      ctx.fillStyle = grad;
+      ctx.fill();
+
+      // Main Evolution Line
+      ctx.strokeStyle = lineColor;
+      ctx.lineWidth = 2.8;
+      ctx.beginPath();
+      records.forEach((r, idx) => {
+        const x = getX(idx);
+        const y = getY(Number(r[fieldKey]));
+        if (idx === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+
+      // Data Points & Value Labels
+      records.forEach((r, idx) => {
+        const val = Number(r[fieldKey]);
+        const x = getX(idx);
+        const y = getY(val);
+
+        // Circle
+        ctx.fillStyle = "#0f172a";
+        ctx.strokeStyle = lineColor;
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.arc(x, y, 4.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // Value label above point
+        ctx.fillStyle = "#f8fafc";
+        ctx.font = "bold 10px Inter, sans-serif";
+        ctx.textAlign = "center";
+        const valStr = isWeight ? formatWeight(val) : formatMeasure(val);
+        ctx.fillText(valStr, x, y - 9);
+
+        // Date label on X-axis (DD/MM)
+        const parts = (r.data || "").split("-");
+        const shortDate = parts.length === 3 ? `${parts[2]}/${parts[1]}` : r.data;
+        ctx.fillStyle = "#94a3b8";
+        ctx.font = "10px Inter, sans-serif";
+        ctx.fillText(shortDate, x, height - 10);
+      });
+    }
+
+    // Redraw charts on window resize
+    window.addEventListener("resize", () => {
+      renderCharts();
+    });
+
+    // -----------------------------------------------------------------------
+    // 8. CRUD HANDLERS & WINDOW FUNCTIONS
+    // -----------------------------------------------------------------------
+    window.setViewMode = function (mode) {
+      currentViewMode = mode;
+      const tableContainer = document.getElementById("tableViewContainer");
+      const cardsContainer = document.getElementById("cardsViewContainer");
+      const btnTable = document.getElementById("viewTableBtn");
+      const btnCards = document.getElementById("viewCardsBtn");
+
+      if (mode === "cards") {
+        tableContainer.classList.add("hidden");
+        cardsContainer.classList.remove("hidden");
+        btnCards.className = "px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 bg-emerald-600 text-white transition";
+        btnTable.className = "px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 text-slate-400 hover:text-white transition";
+      } else {
+        cardsContainer.classList.add("hidden");
+        tableContainer.classList.remove("hidden");
+        btnTable.className = "px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 bg-emerald-600 text-white transition";
+        btnCards.className = "px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 text-slate-400 hover:text-white transition";
+      }
+    };
+
+    window.toggleInlineEditMode = function () {
+      inlineEditMode = !inlineEditMode;
+      const btnText = document.getElementById("inlineEditBtnText");
+      const banner = document.getElementById("inlineEditBanner");
+      const btn = document.getElementById("toggleInlineEditBtn");
+
+      if (inlineEditMode) {
+        window.setViewMode("table");
+        btnText.textContent = "Edição Direta na Tabela: ON";
+        btn.className = "px-3 py-2 rounded-xl bg-amber-500 text-slate-950 font-bold text-xs flex items-center gap-2 transition";
+        banner.classList.remove("hidden");
+      } else {
+        btnText.textContent = "Edição Direta na Tabela: OFF";
+        btn.className = "px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold flex items-center gap-2 transition";
+        banner.classList.add("hidden");
+      }
+      renderTableAndCards();
+    };
+
+    window.updateRecordField = async function (recordId, field, rawValue) {
+      const rec = appState.records.find((r) => r.id === recordId);
+      if (!rec) return;
+
+      if (field === "data" || field === "hora") {
+        rec[field] = rawValue;
+      } else {
+        const parsed = parseFloat(String(rawValue).replace(",", "."));
+        if (!isNaN(parsed)) {
+          rec[field] = parsed;
+        }
+      }
+      await persistStateToCloud(true);
+    };
+
+    window.openRecordModal = function (recordId = null) {
+      const modal = document.getElementById("recordModal");
+      const title = document.getElementById("recordModalTitle");
+      const subtitle = document.getElementById("recordModalSubtitle");
+      const submitText = document.getElementById("recordSubmitBtnText");
+      const helper = document.getElementById("copyLastRecordHelper");
+
+      if (recordId) {
+        const rec = appState.records.find((r) => r.id === recordId);
+        if (!rec) return;
+        title.textContent = `Editar Registro (${formatDateBR(rec.data)})`;
+        subtitle.textContent = "Altere qualquer informação deste registro abaixo";
+        submitText.textContent = "Salvar Alterações";
+        helper.classList.add("hidden");
+
+        document.getElementById("recordIdInput").value = rec.id;
+        document.getElementById("recData").value = rec.data;
+        document.getElementById("recHora").value = rec.hora;
+        document.getElementById("recPeso").value = rec.peso;
+        document.getElementById("recBraco").value = rec.braco;
+        document.getElementById("recAntebraco").value = rec.antebraco;
+        document.getElementById("recCoxa").value = rec.coxa;
+        document.getElementById("recPanturrilha").value = rec.panturrilha;
+        document.getElementById("recQuadril").value = rec.quadril;
+        document.getElementById("recBarriga").value = rec.barriga;
+        document.getElementById("recAbdomen").value = rec.abdomen;
+        document.getElementById("recPeitoral").value = rec.peitoral;
+      } else {
+        title.textContent = "Novo Registro de Peso e Medidas";
+        subtitle.textContent = "Adicione uma nova medição à sua planilha";
+        submitText.textContent = "Inserir Registro";
+        helper.classList.remove("hidden");
+
+        const now = new Date();
+        const yyyy = now.getFullYear();
+        const mm = String(now.getMonth() + 1).padStart(2, "0");
+        const dd = String(now.getDate()).padStart(2, "0");
+        const hh = String(now.getHours()).padStart(2, "0");
+        const min = String(now.getMinutes()).padStart(2, "0");
+
+        document.getElementById("recordIdInput").value = "";
+        document.getElementById("recData").value = `${yyyy}-${mm}-${dd}`;
+        document.getElementById("recHora").value = `${hh}:${min}`;
+
+        // Pre-fill measurements with the latest record to make mobile entry super fast
+        const lastRec = appState.records.length > 0 ? appState.records[appState.records.length - 1] : null;
+        if (lastRec) {
+          document.getElementById("recPeso").value = lastRec.peso;
+          document.getElementById("recBraco").value = lastRec.braco;
+          document.getElementById("recAntebraco").value = lastRec.antebraco;
+          document.getElementById("recCoxa").value = lastRec.coxa;
+          document.getElementById("recPanturrilha").value = lastRec.panturrilha;
+          document.getElementById("recQuadril").value = lastRec.quadril;
+          document.getElementById("recBarriga").value = lastRec.barriga;
+          document.getElementById("recAbdomen").value = lastRec.abdomen;
+          document.getElementById("recPeitoral").value = lastRec.peitoral;
+        } else {
+          document.getElementById("recordForm").reset();
+          document.getElementById("recData").value = `${yyyy}-${mm}-${dd}`;
+          document.getElementById("recHora").value = `${hh}:${min}`;
+        }
+      }
+
+      modal.classList.remove("hidden");
+    };
+
+    window.closeRecordModal = function () {
+      document.getElementById("recordModal").classList.add("hidden");
+    };
+
+    window.fillWithLastRecord = function () {
+      if (appState.records.length === 0) return;
+      const last = appState.records[appState.records.length - 1];
+      document.getElementById("recPeso").value = last.peso;
+      document.getElementById("recBraco").value = last.braco;
+      document.getElementById("recAntebraco").value = last.antebraco;
+      document.getElementById("recCoxa").value = last.coxa;
+      document.getElementById("recPanturrilha").value = last.panturrilha;
+      document.getElementById("recQuadril").value = last.quadril;
+      document.getElementById("recBarriga").value = last.barriga;
+      document.getElementById("recAbdomen").value = last.abdomen;
+      document.getElementById("recPeitoral").value = last.peitoral;
+      showToast("Últimas medidas carregadas no formulário!");
+    };
+
+    window.saveRecordForm = async function (event) {
+      event.preventDefault();
+      const id = document.getElementById("recordIdInput").value;
+      const newEntry = {
+        id: id || `reg-${Date.now()}`,
+        data: document.getElementById("recData").value,
+        hora: document.getElementById("recHora").value,
+        peso: parseFloat(document.getElementById("recPeso").value),
+        braco: parseFloat(document.getElementById("recBraco").value),
+        antebraco: parseFloat(document.getElementById("recAntebraco").value),
+        coxa: parseFloat(document.getElementById("recCoxa").value),
+        panturrilha: parseFloat(document.getElementById("recPanturrilha").value),
+        quadril: parseFloat(document.getElementById("recQuadril").value),
+        barriga: parseFloat(document.getElementById("recBarriga").value),
+        abdomen: parseFloat(document.getElementById("recAbdomen").value),
+        peitoral: parseFloat(document.getElementById("recPeitoral").value)
+      };
+
+      if (id) {
+        const index = appState.records.findIndex((r) => r.id === id);
+        if (index !== -1) {
+          appState.records[index] = newEntry;
+        }
+      } else {
+        appState.records.push(newEntry);
+      }
+
+      window.closeRecordModal();
+      await persistStateToCloud(true);
+    };
+
+    // Goal Modal Handlers
+    window.openGoalModal = function () {
+      const g = appState.goal;
+      document.getElementById("goalDataInput").value = g.dataMeta;
+      document.getElementById("goalPesoInput").value = g.peso;
+      document.getElementById("goalBraco").value = g.braco;
+      document.getElementById("goalAntebraco").value = g.antebraco;
+      document.getElementById("goalCoxa").value = g.coxa;
+      document.getElementById("goalPanturrilha").value = g.panturrilha;
+      document.getElementById("goalQuadril").value = g.quadril;
+      document.getElementById("goalBarriga").value = g.barriga;
+      document.getElementById("goalAbdomen").value = g.abdomen;
+      document.getElementById("goalPeitoral").value = g.peitoral;
+      document.getElementById("goalModal").classList.remove("hidden");
+    };
+
+    window.closeGoalModal = function () {
+      document.getElementById("goalModal").classList.add("hidden");
+    };
+
+    window.saveGoalForm = async function (event) {
+      event.preventDefault();
+      appState.goal = {
+        dataMeta: document.getElementById("goalDataInput").value,
+        peso: parseFloat(document.getElementById("goalPesoInput").value),
+        braco: parseFloat(document.getElementById("goalBraco").value),
+        antebraco: parseFloat(document.getElementById("goalAntebraco").value),
+        coxa: parseFloat(document.getElementById("goalCoxa").value),
+        panturrilha: parseFloat(document.getElementById("goalPanturrilha").value),
+        quadril: parseFloat(document.getElementById("goalQuadril").value),
+        barriga: parseFloat(document.getElementById("goalBarriga").value),
+        abdomen: parseFloat(document.getElementById("goalAbdomen").value),
+        peitoral: parseFloat(document.getElementById("goalPeitoral").value)
+      };
+
+      window.closeGoalModal();
+      await persistStateToCloud(true);
+    };
+
+    // Delete & Restore Confirm Modal Handlers
+    window.confirmDeleteRecord = function (recordId) {
+      const rec = appState.records.find((r) => r.id === recordId);
+      if (!rec) return;
+
+      document.getElementById("confirmModalTitle").textContent = "Excluir Registro";
+      document.getElementById("confirmModalMessage").textContent = `Deseja realmente excluir a medição do dia ${formatDateBR(rec.data)} (${formatWeight(rec.peso)} kg)?`;
+      const actionBtn = document.getElementById("confirmModalActionBtn");
+      actionBtn.textContent = "Sim, Excluir";
+      actionBtn.onclick = async () => {
+        appState.records = appState.records.filter((r) => r.id !== recordId);
+        window.closeConfirmModal();
+        await persistStateToCloud(true);
+      };
+
+      document.getElementById("confirmModal").classList.remove("hidden");
+    };
+
+    window.openRestoreConfirmModal = function () {
+      document.getElementById("confirmModalTitle").textContent = "Restaurar Planilha Original";
+      document.getElementById("confirmModalMessage").textContent = "Isso restaurará os 5 registros originais e a meta de 31/12/2026 (93,00 kg) da planilha do Alan. Deseja continuar?";
+      const actionBtn = document.getElementById("confirmModalActionBtn");
+      actionBtn.textContent = "Restaurar Dados";
+      actionBtn.onclick = async () => {
+        appState.goal = structuredClone(INITIAL_GOAL);
+        appState.records = structuredClone(INITIAL_RECORDS);
+        window.closeConfirmModal();
+        window.closeSyncModal();
+        await persistStateToCloud(true);
+      };
+
+      document.getElementById("confirmModal").classList.remove("hidden");
+    };
+
+    window.closeConfirmModal = function () {
+      document.getElementById("confirmModal").classList.add("hidden");
+    };
+
+    // Sync & Backup Modal Handlers
+    window.openSyncModal = function () {
+      document.getElementById("webhookUrlInput").value = appState.webhookUrl || "";
+      document.getElementById("syncModal").classList.remove("hidden");
+    };
+
+    window.closeSyncModal = function () {
+      document.getElementById("syncModal").classList.add("hidden");
+    };
+
+    window.toggleAppsScriptHelp = function () {
+      const box = document.getElementById("appsScriptHelpBox");
+      box.classList.toggle("hidden");
+    };
+
+    window.copyAppsScriptCode = function () {
+      const code = document.getElementById("appsScriptCode").innerText;
+      const temp = document.createElement("textarea");
+      temp.value = code;
+      document.body.appendChild(temp);
+      temp.select();
+      document.execCommand("copy");
+      temp.remove();
+      showToast("Código copiado para a área de transferência!");
+    };
+
+    window.saveWebhookUrl = async function () {
+      const url = document.getElementById("webhookUrlInput").value.trim();
+      appState.webhookUrl = url;
+
+      if (url) {
+        try {
+          const resp = await fetch(url);
+          if (resp.ok) {
+            const remoteData = await resp.json();
+            if (remoteData && remoteData.goal && Array.isArray(remoteData.records)) {
+              appState.goal = remoteData.goal;
+              appState.records = sortRecordsChronologically(remoteData.records);
+              showToast("Dados carregados da Planilha Google com sucesso!");
+            }
+          }
+        } catch (err) {
+          // If empty or CORS, push current state to initialize remote
+        }
+      }
+      await persistStateToCloud(true);
+    };
+
+    // Export CSV (Compatible with Excel)
+    window.exportToCSV = function () {
+      const headers = [
+        "DIA",
+        "HORA",
+        "PESO NU",
+        "BRACO",
+        "ANTEBRACO",
+        "COXA",
+        "PANTURRILHA",
+        "QUADRIL",
+        "BARRIGA",
+        "ABDOMEN",
+        "PEITORAL"
+      ];
+      const rows = appState.records.map((r) => [
+        formatDateBR(r.data),
+        r.hora,
+        formatWeight(r.peso),
+        r.braco,
+        r.antebraco,
+        r.coxa,
+        r.panturrilha,
+        r.quadril,
+        r.barriga,
+        r.abdomen,
+        r.peitoral
+      ]);
+
+      // Add Goal Row
+      const g = appState.goal;
+      rows.push([
+        `META ${formatDateBR(g.dataMeta)}`,
+        "",
+        formatWeight(g.peso),
+        g.braco,
+        g.antebraco,
+        g.coxa,
+        g.panturrilha,
+        g.quadril,
+        g.barriga,
+        g.abdomen,
+        g.peitoral
+      ]);
+
+      const csvContent =
+        "\uFEFF" +
+        [headers.join(";"), ...rows.map((row) => row.join(";"))].join("\r\n");
+
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `CONTROLE_PESO_E_MEDIDA_ALAN_${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast("Planilha CSV gerada com sucesso!");
+    };
+
+    // Export JSON Backup
+    window.exportToJSON = function () {
+      const dataStr = JSON.stringify(appState, null, 2);
+      const blob = new Blob([dataStr], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `backup_peso_medidas_alan_${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast("Backup JSON exportado!");
+    };
+
+    // Import JSON Backup
+    window.importFromJSON = function (event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          const imported = JSON.parse(e.target.result);
+          if (imported && imported.goal && Array.isArray(imported.records)) {
+            appState.goal = imported.goal;
+            appState.records = sortRecordsChronologically(imported.records);
+            window.closeSyncModal();
+            await persistStateToCloud(true);
+            showToast("Backup importado com sucesso!");
+          } else {
+            showToast("Arquivo JSON inválido.", "error");
+          }
+        } catch (err) {
+          showToast("Erro ao ler o arquivo JSON.", "error");
+        }
+      };
+      reader.readAsText(file);
+    };
+
+    // Initialize Application on Load
+    window.addEventListener("DOMContentLoaded", () => {
+      renderAll();
+      initCloudSync();
+    });
+  </script>
+</body>
+</html>
