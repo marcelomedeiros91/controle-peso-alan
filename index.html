@@ -3,9 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
-  <title>Controle de Peso e Medidas - Alan</title>
+  <title>Controle de Peso, Medidas e Bioimpedância - Alan</title>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js via CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <!-- Google Fonts: Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -20,16 +22,6 @@
         extend: {
           fontFamily: {
             sans: ['Inter', 'sans-serif'],
-          },
-          colors: {
-            brand: {
-              50: '#ecfdf5',
-              100: '#d1fae5',
-              500: '#10b981',
-              600: '#059669',
-              700: '#047857',
-              900: '#064e3b',
-            }
           }
         }
       }
@@ -39,10 +31,9 @@
   <style>
     body {
       font-family: 'Inter', sans-serif;
-      background-color: #0f172a;
+      background-color: #0b1120;
       color: #f8fafc;
     }
-    /* Custom Scrollbar */
     ::-webkit-scrollbar {
       width: 8px;
       height: 8px;
@@ -57,22 +48,24 @@
     ::-webkit-scrollbar-thumb:hover {
       background: #64748b;
     }
-    /* Sticky table column for mobile horizontal scroll */
     .sticky-col {
       position: sticky;
       left: 0;
       z-index: 10;
-      background-color: inherit;
     }
     .glass-panel {
-      background: rgba(30, 41, 59, 0.85);
+      background: rgba(30, 41, 59, 0.82);
       backdrop-filter: blur(12px);
       border: 1px solid rgba(148, 163, 184, 0.15);
     }
     .goal-glow {
-      background: linear-gradient(135deg, rgba(16, 185, 129, 0.18) 0%, rgba(15, 23, 42, 0.95) 60%, rgba(59, 130, 246, 0.15) 100%);
-      border: 1px solid rgba(16, 185, 129, 0.4);
-      box-shadow: 0 10px 30px -10px rgba(16, 185, 129, 0.25);
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.18) 0%, rgba(15, 23, 42, 0.96) 55%, rgba(14, 165, 233, 0.15) 100%);
+      border: 1px solid rgba(16, 185, 129, 0.45);
+      box-shadow: 0 12px 35px -10px rgba(16, 185, 129, 0.25);
+    }
+    .scale-app-panel {
+      background: linear-gradient(160deg, rgba(16, 185, 129, 0.22) 0%, rgba(6, 78, 59, 0.45) 45%, rgba(15, 23, 42, 0.95) 100%);
+      border: 1px solid rgba(16, 185, 129, 0.35);
     }
     input[type="number"]::-webkit-inner-spin-button,
     input[type="number"]::-webkit-outer-spin-button {
@@ -83,7 +76,7 @@
 <body class="min-h-screen pb-24 selection:bg-emerald-500 selection:text-white">
 
   <!-- TOP NAVIGATION BAR -->
-  <header class="sticky top-0 z-30 bg-slate-900/90 backdrop-blur-md border-b border-slate-800">
+  <header class="sticky top-0 z-30 bg-slate-900/95 backdrop-blur-md border-b border-slate-800">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap items-center justify-between gap-3">
       <div class="flex items-center gap-3">
         <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/20">
@@ -91,32 +84,32 @@
         </div>
         <div>
           <div class="flex items-center gap-2">
-            <h1 class="text-lg sm:text-xl font-extrabold tracking-tight text-white">Controle Peso & Medidas</h1>
+            <h1 class="text-base sm:text-xl font-extrabold tracking-tight text-white">Peso, Medidas & Bioimpedância</h1>
             <span class="px-2 py-0.5 text-xs font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full">Alan</span>
           </div>
           <p class="text-xs text-slate-400 flex items-center gap-2">
-            <span id="syncStatusIndicator" class="inline-flex items-center gap-1.5 text-emerald-400">
+            <span class="inline-flex items-center gap-1.5 text-emerald-400">
               <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span id="syncStatusText">Sincronizado</span>
+              <span id="syncStatusText">Salvo e Sincronizado</span>
             </span>
           </p>
         </div>
       </div>
 
       <!-- Action Buttons -->
-      <div class="flex items-center gap-2 sm:gap-3">
-        <button onclick="openSyncModal()" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs sm:text-sm font-medium flex items-center gap-2 transition" title="Sincronizar Computador e Celular / Backup">
+      <div class="flex items-center gap-2 sm:gap-2.5">
+        <button onclick="openSyncModal()" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs sm:text-sm font-medium flex items-center gap-2 transition" title="Sincronizar Computador e Celular / GitHub Pages / Backup">
           <i class="fa-solid fa-cloud-arrow-up text-sky-400"></i>
-          <span class="hidden sm:inline">Sincronizar / GitHub</span>
-          <span class="sm:hidden">Sync</span>
+          <span class="hidden md:inline">Nuvem / GitHub</span>
+          <span class="md:hidden">Sync</span>
         </button>
 
-        <button onclick="openGoalModal()" class="px-3 py-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 text-xs sm:text-sm font-semibold flex items-center gap-2 transition">
+        <button onclick="openGoalModal()" class="px-3 py-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 text-xs sm:text-sm font-semibold flex items-center gap-1.5 transition">
           <i class="fa-solid fa-bullseye"></i>
           <span>Editar Meta</span>
         </button>
 
-        <button onclick="openRecordModal()" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white text-xs sm:text-sm font-bold shadow-lg shadow-emerald-500/25 flex items-center gap-2 transition transform active:scale-95">
+        <button onclick="openRecordModal()" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white text-xs sm:text-sm font-bold shadow-lg shadow-emerald-500/25 flex items-center gap-1.5 transition transform active:scale-95">
           <i class="fa-solid fa-plus"></i>
           <span>Novo Registro</span>
         </button>
@@ -127,24 +120,30 @@
   <!-- MAIN CONTAINER -->
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-6">
 
-    <!-- 1. HERO GOAL SECTION (META EM DESTAQUE NO TOPO - EDITÁVEL) -->
+    <!-- =================================================================== -->
+    <!-- 1. HERO GOAL SECTION (META 31/12/2026 EM DESTAQUE - 100% EDITÁVEL)  -->
+    <!-- =================================================================== -->
     <section class="goal-glow rounded-2xl p-5 sm:p-6 relative overflow-hidden">
       <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
         
-        <!-- Left: Main Weight Goal & Quick Inline Edit -->
+        <!-- Left: Main Weight Goal & Progress Bar -->
         <div class="space-y-3 flex-1">
-          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-bold uppercase tracking-wider">
-            <i class="fa-solid fa-trophy text-amber-400"></i>
-            <span>Meta Principal em Destaque</span>
-            <span id="daysRemainingBadge" class="ml-1 px-2 py-0.5 rounded-full bg-slate-900/80 text-white"></span>
+          <div class="flex flex-wrap items-center gap-2">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-bold uppercase tracking-wider">
+              <i class="fa-solid fa-trophy text-amber-400"></i>
+              <span>Meta Principal em Destaque</span>
+            </div>
+            <span id="daysRemainingBadge" class="px-2.5 py-1 rounded-full bg-slate-900/90 border border-slate-700 text-xs font-bold text-white"></span>
           </div>
 
           <div class="flex flex-wrap items-baseline gap-x-4 gap-y-2">
             <div>
-              <span class="text-slate-400 text-xs sm:text-sm font-medium block">Meta para <button onclick="openGoalModal()" class="underline decoration-dotted hover:text-emerald-400 transition font-semibold" id="goalDateDisplay">31/12/2026</button>:</span>
-              <div class="flex items-center gap-3 mt-0.5">
+              <span class="text-slate-300 text-xs sm:text-sm font-medium block">
+                Meta de Peso para <button onclick="openGoalModal()" class="underline decoration-dotted hover:text-emerald-400 transition font-bold text-white" id="goalDateDisplay">31/12/2026</button>:
+              </span>
+              <div class="flex flex-wrap items-center gap-3 mt-1">
                 <span id="goalWeightDisplay" class="text-4xl sm:text-5xl font-black tracking-tight text-white">93,00 <small class="text-2xl font-bold text-emerald-400">kg</small></span>
-                <button onclick="openGoalModal()" class="px-3 py-1.5 rounded-xl bg-slate-800/90 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/40 text-xs font-bold flex items-center gap-1.5 transition shadow-sm" title="Clique para alterar a Meta de Peso, Data ou Medidas">
+                <button onclick="openGoalModal()" class="px-3 py-1.5 rounded-xl bg-slate-800/90 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/40 text-xs font-bold flex items-center gap-1.5 transition shadow-sm">
                   <i class="fa-solid fa-pen-to-square"></i>
                   <span>Alterar Meta</span>
                 </button>
@@ -162,49 +161,62 @@
             <div class="w-full h-3.5 bg-slate-900/90 rounded-full overflow-hidden border border-slate-700/80 p-0.5">
               <div id="goalProgressBar" class="h-full bg-gradient-to-r from-emerald-500 via-teal-400 to-sky-400 rounded-full transition-all duration-500" style="width: 26.4%"></div>
             </div>
-            <p id="weeklyPaceText" class="text-xs text-slate-400 mt-2"></p>
+            <p id="weeklyPaceText" class="text-xs text-slate-300 mt-2"></p>
           </div>
         </div>
 
-        <!-- Right: 3 Key Stat Cards (Peso Atual, Eliminado, Falta para a Meta) -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 lg:w-[540px]">
+        <!-- Right: 4 Key Summary Stat Cards (Peso Atual, Evolução, Gordura Corporal, Falta p/ Meta) -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 lg:w-[620px]">
           <!-- Card 1: Peso Atual -->
-          <div class="bg-slate-900/80 border border-slate-700/80 rounded-xl p-4 flex flex-col justify-between">
-            <div class="flex items-center justify-between text-xs text-slate-400 font-medium">
-              <span>PESO ATUAL</span>
+          <div class="bg-slate-900/85 border border-slate-700/80 rounded-xl p-3.5 flex flex-col justify-between">
+            <div class="flex items-center justify-between text-[11px] text-slate-400 font-bold uppercase">
+              <span>Peso Atual</span>
               <i class="fa-solid fa-scale-balanced text-sky-400"></i>
             </div>
             <div class="my-1">
               <span id="currentWeightCard" class="text-2xl sm:text-3xl font-extrabold text-white">98,15</span>
-              <span class="text-sm font-bold text-slate-400">kg</span>
+              <span class="text-xs font-bold text-slate-400">kg</span>
             </div>
-            <div id="lastRecordDateCard" class="text-[11px] text-slate-400">Em 03/11/2026 às 10:27</div>
+            <div id="lastRecordDateCard" class="text-[11px] text-slate-400 truncate">03/11/2026 às 10:27</div>
           </div>
 
           <!-- Card 2: Total Eliminado -->
-          <div class="bg-slate-900/80 border border-slate-700/80 rounded-xl p-4 flex flex-col justify-between">
-            <div class="flex items-center justify-between text-xs text-slate-400 font-medium">
-              <span>EVOLUÇÃO TOTAL</span>
+          <div class="bg-slate-900/85 border border-slate-700/80 rounded-xl p-3.5 flex flex-col justify-between">
+            <div class="flex items-center justify-between text-[11px] text-slate-400 font-bold uppercase">
+              <span>Evolução Peso</span>
               <i class="fa-solid fa-arrow-trend-down text-emerald-400"></i>
             </div>
             <div class="my-1">
               <span id="totalLostCard" class="text-2xl sm:text-3xl font-extrabold text-emerald-400">-1,85</span>
-              <span class="text-sm font-bold text-emerald-400/80">kg</span>
+              <span class="text-xs font-bold text-emerald-400/80">kg</span>
             </div>
-            <div id="lastDeltaCard" class="text-[11px] text-slate-400">Última pesagem: -0,70 kg</div>
+            <div id="lastDeltaCard" class="text-[11px] text-slate-400 truncate">Última: -0,70 kg</div>
           </div>
 
-          <!-- Card 3: Falta para a Meta -->
-          <div class="bg-slate-900/80 border border-emerald-500/30 rounded-xl p-4 flex flex-col justify-between">
-            <div class="flex items-center justify-between text-xs text-amber-300 font-semibold">
-              <span>FALTA P/ A META</span>
+          <!-- Card 3: Gordura Corporal Atual (Bioimpedância) -->
+          <div class="bg-slate-900/85 border border-slate-700/80 rounded-xl p-3.5 flex flex-col justify-between">
+            <div class="flex items-center justify-between text-[11px] text-slate-400 font-bold uppercase">
+              <span>Gordura Corp.</span>
+              <i class="fa-solid fa-fire-flame-simple text-rose-400"></i>
+            </div>
+            <div class="my-1">
+              <span id="currentFatCard" class="text-2xl sm:text-3xl font-extrabold text-white">33,9</span>
+              <span class="text-xs font-bold text-slate-400">%</span>
+            </div>
+            <div id="fatDeltaCard" class="text-[11px] text-emerald-400 font-semibold truncate">-0,6% (-1,23 kg gord.)</div>
+          </div>
+
+          <!-- Card 4: Falta para a Meta -->
+          <div class="bg-slate-900/85 border border-amber-500/35 rounded-xl p-3.5 flex flex-col justify-between">
+            <div class="flex items-center justify-between text-[11px] text-amber-300 font-bold uppercase">
+              <span>Falta p/ Meta</span>
               <i class="fa-solid fa-flag-checkered text-amber-400"></i>
             </div>
             <div class="my-1">
               <span id="remainingToGoalCard" class="text-2xl sm:text-3xl font-extrabold text-amber-300">5,15</span>
-              <span class="text-sm font-bold text-amber-300/80">kg</span>
+              <span class="text-xs font-bold text-amber-300/80">kg</span>
             </div>
-            <div id="remainingTargetSubtext" class="text-[11px] text-slate-400">Para chegar aos 93,00 kg</div>
+            <div id="remainingTargetSubtext" class="text-[11px] text-slate-400 truncate">Para 93,00 kg</div>
           </div>
         </div>
       </div>
@@ -212,12 +224,14 @@
       <!-- Measurements Goal Progress Strip (Editável e Comparativo) -->
       <div class="mt-6 pt-5 border-t border-slate-700/60">
         <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-          <h2 class="text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
-            <i class="fa-solid fa-ruler-combined text-emerald-400"></i>
-            <span>Metas de Medidas Corporais (Atual vs. Meta em <span id="goalDateShortLabel">31/12/2026</span>)</span>
-          </h2>
+          <div class="flex items-center gap-2">
+            <h2 class="text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-200 flex items-center gap-2">
+              <i class="fa-solid fa-ruler-combined text-emerald-400"></i>
+              <span>Metas de Medidas Corporais (Atual vs. Meta em <span id="goalDateShortLabel">31/12/2026</span>)</span>
+            </h2>
+          </div>
           <button onclick="openGoalModal()" class="text-xs text-emerald-400 hover:text-emerald-300 font-semibold flex items-center gap-1">
-            <i class="fa-solid fa-Sliders"></i> Editar metas de medidas
+            <i class="fa-solid fa-sliders"></i> Editar metas de medidas e bioimpedância
           </button>
         </div>
 
@@ -227,44 +241,104 @@
       </div>
     </section>
 
-    <!-- 2. RECORDS TABLE & INLINE/MODAL EDITING SECTION -->
-    <section class="glass-panel rounded-2xl p-4 sm:p-6 space-y-4">
-      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h2 class="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
-            <i class="fa-solid fa-table-list text-emerald-400"></i>
-            <span>Planilha de Registros (Peso e Medidas)</span>
-            <span id="recordsCountBadge" class="px-2.5 py-0.5 text-xs font-bold rounded-full bg-slate-800 text-slate-300 border border-slate-700">5 registros</span>
+    <!-- =================================================================== -->
+    <!-- 2. BIOIMPEDANCE SMART SCALE DASHBOARD (BASEADO NAS FOTOS DA BALANÇA)-->
+    <!-- =================================================================== -->
+    <section class="scale-app-panel rounded-2xl p-5 sm:p-6 space-y-5">
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 border-b border-emerald-500/25 pb-4">
+        <div class="space-y-1">
+          <div class="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-[11px] font-bold uppercase tracking-wider">
+            <i class="fa-solid fa-mobile-screen-button"></i>
+            <span>Relatório de Bioimpedância (Balança Inteligente)</span>
+          </div>
+          <h2 class="text-lg sm:text-xl font-extrabold text-white flex flex-wrap items-center gap-2">
+            <span>Análise Corporal Detalhada</span>
+            <span id="bioBodyTypeBadge" class="px-3 py-0.5 rounded-full bg-emerald-500 text-slate-950 text-xs font-black uppercase tracking-wide">
+              Tipo: Grosso-conjunto
+            </span>
           </h2>
-          <p class="text-xs sm:text-sm text-slate-400 mt-0.5">
-            Você pode clicar em <strong>"Editar"</strong> em qualquer linha ou ativar a <strong>Edição Direta na Tabela</strong> para alterar valores como no Excel.
+          <p class="text-xs text-slate-300">
+            Acompanhe os 8 indicadores da sua balança com os mesmos status (<em>Alto, Insuficiente, Objetivo atingido, Ótimo, Normal</em>) e compare entre datas.
           </p>
         </div>
 
-        <!-- Controls: Inline Edit Toggle, Mobile View Toggle, New Record -->
+        <!-- Date Selectors for Comparison -->
+        <div class="flex flex-wrap items-center gap-2 bg-slate-900/80 p-2.5 rounded-xl border border-slate-700/80">
+          <div class="flex flex-col">
+            <label class="text-[10px] font-bold uppercase text-emerald-400 px-1">Avaliação Selecionada</label>
+            <select id="bioCurrentSelect" onchange="renderBioDashboard()" class="bg-slate-950 text-white text-xs font-bold px-2.5 py-1.5 rounded-lg border border-slate-700 focus:outline-none focus:border-emerald-400"></select>
+          </div>
+          <div class="text-slate-400 font-bold text-xs px-1">vs.</div>
+          <div class="flex flex-col">
+            <label class="text-[10px] font-bold uppercase text-slate-400 px-1">Comparar com</label>
+            <select id="bioCompareSelect" onchange="renderBioDashboard()" class="bg-slate-950 text-slate-200 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-slate-700 focus:outline-none focus:border-sky-400"></select>
+          </div>
+          <button id="editSelectedBioBtn" onclick="editCurrentlySelectedBioRecord()" class="px-3 py-2 rounded-lg bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-200 border border-emerald-500/40 text-xs font-bold transition flex items-center gap-1" title="Editar dados desta pesagem">
+            <i class="fa-solid fa-pen"></i>
+            <span class="hidden sm:inline">Editar</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Scale Summary Banner (Objectives reached vs attention items) -->
+      <div id="bioSummaryBanner" class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <!-- Populated dynamically by JS -->
+      </div>
+
+      <!-- 8 Bioimpedance Cards Grid matching the Scale App -->
+      <div id="bioMetricsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+        <!-- Populated dynamically by JS -->
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- 3. SPREADSHEET TABLE & MOBILE CARDS (MEDIDAS + BIOIMPEDÂNCIA)       -->
+    <!-- =================================================================== -->
+    <section class="glass-panel rounded-2xl p-4 sm:p-6 space-y-4">
+      <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
+        <div>
+          <h2 class="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-table-list text-emerald-400"></i>
+            <span>Planilha Completa de Registros</span>
+            <span id="recordsCountBadge" class="px-2.5 py-0.5 text-xs font-bold rounded-full bg-slate-800 text-slate-300 border border-slate-700">5 registros</span>
+          </h2>
+          <p class="text-xs sm:text-sm text-slate-400 mt-0.5">
+            Todos os registros são 100% editáveis. Filtre as colunas abaixo ou ative a <strong>Edição Direta na Tabela</strong>.
+          </p>
+        </div>
+
+        <!-- Controls: Column Filter, Inline Edit Toggle, Mobile View Toggle, New Record -->
         <div class="flex flex-wrap items-center gap-2">
+          <!-- Column Group Filter -->
+          <div class="inline-flex rounded-xl bg-slate-900 p-1 border border-slate-800 text-xs">
+            <button id="colFilterAll" onclick="setTableColumnFilter('all')" class="px-2.5 py-1.5 rounded-lg font-bold bg-emerald-600 text-white transition">
+              Completa
+            </button>
+            <button id="colFilterMeasures" onclick="setTableColumnFilter('measures')" class="px-2.5 py-1.5 rounded-lg font-semibold text-slate-400 hover:text-white transition">
+              Só Medidas (cm)
+            </button>
+            <button id="colFilterBio" onclick="setTableColumnFilter('bio')" class="px-2.5 py-1.5 rounded-lg font-semibold text-slate-400 hover:text-white transition">
+              Só Bioimpedância
+            </button>
+          </div>
+
           <!-- Toggle Direct Spreadsheet Edit Mode -->
           <button id="toggleInlineEditBtn" onclick="toggleInlineEditMode()" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold flex items-center gap-2 transition">
             <i class="fa-solid fa-keyboard text-amber-400"></i>
-            <span id="inlineEditBtnText">Edição Direta na Tabela: OFF</span>
+            <span id="inlineEditBtnText">Edição Direta: OFF</span>
           </button>
 
           <!-- View Switcher (Table vs Cards) -->
           <div class="inline-flex rounded-xl bg-slate-900 p-1 border border-slate-800">
-            <button id="viewTableBtn" onclick="setViewMode('table')" class="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 bg-emerald-600 text-white transition">
+            <button id="viewTableBtn" onclick="setViewMode('table')" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 bg-sky-600 text-white transition">
               <i class="fa-solid fa-table"></i>
-              <span>Planilha</span>
+              <span>Tabela</span>
             </button>
-            <button id="viewCardsBtn" onclick="setViewMode('cards')" class="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 text-slate-400 hover:text-white transition">
+            <button id="viewCardsBtn" onclick="setViewMode('cards')" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 text-slate-400 hover:text-white transition">
               <i class="fa-solid fa-grip"></i>
               <span>Cards (Celular)</span>
             </button>
           </div>
-
-          <button onclick="openRecordModal()" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 transition">
-            <i class="fa-solid fa-plus"></i>
-            <span>Inserir Registro</span>
-          </button>
         </div>
       </div>
 
@@ -272,7 +346,7 @@
       <div id="inlineEditBanner" class="hidden rounded-xl bg-amber-500/15 border border-amber-500/40 px-4 py-3 text-xs sm:text-sm text-amber-200 flex flex-wrap items-center justify-between gap-2">
         <div class="flex items-center gap-2">
           <i class="fa-solid fa-bolt text-amber-400 text-base"></i>
-          <span><strong>Modo Edição Direta Ativo:</strong> Altere qualquer data, hora, peso ou medida diretamente nas células abaixo. Tudo é salvo automaticamente!</span>
+          <span><strong>Modo Edição Direta Ativo:</strong> Digite qualquer medida ou dado da balança diretamente nas células abaixo (inclusive os dados de 13/10). Tudo é salvo automaticamente!</span>
         </div>
         <button onclick="toggleInlineEditMode()" class="px-3 py-1 rounded-lg bg-amber-500 text-slate-950 font-bold text-xs hover:bg-amber-400 transition">
           Concluir Edição Direta
@@ -282,21 +356,8 @@
       <!-- SPREADSHEET TABLE VIEW -->
       <div id="tableViewContainer" class="overflow-x-auto rounded-xl border border-slate-700/80 bg-slate-900/60">
         <table class="w-full text-left border-collapse">
-          <thead>
-            <tr class="bg-slate-800/90 text-slate-300 text-[11px] sm:text-xs font-bold uppercase tracking-wider border-b border-slate-700">
-              <th class="py-3.5 px-3 sticky-col bg-slate-800">Dia</th>
-              <th class="py-3.5 px-2.5 text-center">Hora</th>
-              <th class="py-3.5 px-3 text-center bg-emerald-950/40 text-emerald-300 border-x border-slate-700/60">Peso Nu (kg)</th>
-              <th class="py-3.5 px-2.5 text-center">Braço</th>
-              <th class="py-3.5 px-2.5 text-center">Antebraço</th>
-              <th class="py-3.5 px-2.5 text-center">Coxa</th>
-              <th class="py-3.5 px-2.5 text-center">Panturrilha</th>
-              <th class="py-3.5 px-2.5 text-center">Quadril</th>
-              <th class="py-3.5 px-2.5 text-center">Barriga</th>
-              <th class="py-3.5 px-2.5 text-center">Abdômen</th>
-              <th class="py-3.5 px-2.5 text-center">Peitoral</th>
-              <th class="py-3.5 px-3 text-center">Ações</th>
-            </tr>
+          <thead id="recordsTableHead">
+            <!-- Populated dynamically based on column filter -->
           </thead>
           <tbody id="recordsTableBody" class="divide-y divide-slate-800 text-xs sm:text-sm">
             <!-- Populated by JS -->
@@ -313,7 +374,9 @@
       </div>
     </section>
 
-    <!-- 3. INTERACTIVE CHARTS SECTION -->
+    <!-- =================================================================== -->
+    <!-- 4. INTERACTIVE CHARTS SECTION (CHART.JS)                            -->
+    <!-- =================================================================== -->
     <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <!-- Weight Chart -->
       <div class="glass-panel rounded-2xl p-4 sm:p-6 flex flex-col justify-between">
@@ -323,40 +386,52 @@
               <i class="fa-solid fa-chart-line text-emerald-400"></i>
               <span>Evolução do Peso Nu vs. Meta</span>
             </h3>
-            <p class="text-xs text-slate-400">Histórico de pesagens rumo à linha de meta (<span id="chartGoalWeightText">93,00 kg</span>)</p>
+            <p class="text-xs text-slate-400">Histórico de pesagens rumo à meta de <span id="chartGoalWeightText">93,00 kg</span></p>
           </div>
           <span class="px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-semibold">
             Meta: <strong id="chartBadgeGoal">93,00 kg</strong>
           </span>
         </div>
         <div class="relative w-full h-64 sm:h-72 bg-slate-900/70 rounded-xl border border-slate-800 p-3">
-          <canvas id="weightChartCanvas" class="w-full h-full"></canvas>
+          <canvas id="weightChartCanvas"></canvas>
         </div>
       </div>
 
-      <!-- Body Measurements Evolution Chart -->
+      <!-- Body Measurements & Bioimpedance Evolution Chart -->
       <div class="glass-panel rounded-2xl p-4 sm:p-6 flex flex-col justify-between">
         <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
           <div>
             <h3 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
-              <i class="fa-solid fa-ruler-horizontal text-sky-400"></i>
-              <span>Evolução das Medidas (cm)</span>
+              <i class="fa-solid fa-chart-column text-sky-400"></i>
+              <span>Gráfico de Medidas & Bioimpedância</span>
             </h3>
-            <p class="text-xs text-slate-400">Selecione a medida para comparar evolução e meta de 31/12/2026</p>
+            <p class="text-xs text-slate-400">Alterne entre medidas em cm ou indicadores da balança</p>
           </div>
-          <select id="selectedMeasurementChart" onchange="renderCharts()" class="px-3 py-1.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs sm:text-sm font-semibold focus:outline-none focus:border-emerald-500">
-            <option value="barriga">Barriga (cm)</option>
-            <option value="abdomen">Abdômen (cm)</option>
-            <option value="quadril">Quadril (cm)</option>
-            <option value="peitoral">Peitoral (cm)</option>
-            <option value="coxa">Coxa (cm)</option>
-            <option value="panturrilha">Panturrilha (cm)</option>
-            <option value="braco">Braço (cm)</option>
-            <option value="antebraco">Antebraço (cm)</option>
+          <select id="selectedMetricChart" onchange="renderCharts()" class="px-3 py-1.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs sm:text-sm font-semibold focus:outline-none focus:border-emerald-500">
+            <optgroup label="Bioimpedância (Balança)">
+              <option value="gorduraCorporal" selected>Gordura Corporal (%)</option>
+              <option value="imc">IMC</option>
+              <option value="musculo">Músculo (kg)</option>
+              <option value="agua">Água Corporal (%)</option>
+              <option value="proteina">Proteína (%)</option>
+              <option value="metabolismoBasal">Metabolismo Basal (kcal)</option>
+              <option value="gorduraVisceral">Gordura Visceral</option>
+              <option value="massaOssea">Massa Óssea (kg)</option>
+            </optgroup>
+            <optgroup label="Medidas Corporais (cm)">
+              <option value="barriga">Barriga (cm)</option>
+              <option value="abdomen">Abdômen (cm)</option>
+              <option value="quadril">Quadril (cm)</option>
+              <option value="peitoral">Peitoral (cm)</option>
+              <option value="coxa">Coxa (cm)</option>
+              <option value="panturrilha">Panturrilha (cm)</option>
+              <option value="braco">Braço (cm)</option>
+              <option value="antebraco">Antebraço (cm)</option>
+            </optgroup>
           </select>
         </div>
         <div class="relative w-full h-64 sm:h-72 bg-slate-900/70 rounded-xl border border-slate-800 p-3">
-          <canvas id="measureChartCanvas" class="w-full h-full"></canvas>
+          <canvas id="metricChartCanvas"></canvas>
         </div>
       </div>
     </section>
@@ -369,18 +444,18 @@
   </button>
 
   <!-- ===================================================================== -->
-  <!-- MODAL 1: INSERIR OU EDITAR REGISTRO -->
+  <!-- MODAL 1: INSERIR OU EDITAR REGISTRO (MEDIDAS + BIOIMPEDÂNCIA)         -->
   <!-- ===================================================================== -->
-  <div id="recordModal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-2xl w-full p-5 sm:p-6 shadow-2xl my-auto">
+  <div id="recordModal" class="fixed inset-0 z-50 hidden bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-3xl w-full p-5 sm:p-6 shadow-2xl my-auto max-h-[92vh] overflow-y-auto">
       <div class="flex items-center justify-between pb-4 border-b border-slate-800">
         <div class="flex items-center gap-2.5">
           <div class="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
-            <i id="recordModalIcon" class="fa-solid fa-plus"></i>
+            <i class="fa-solid fa-weight-scale"></i>
           </div>
           <div>
-            <h3 id="recordModalTitle" class="text-lg font-bold text-white">Novo Registro de Peso e Medidas</h3>
-            <p id="recordModalSubtitle" class="text-xs text-slate-400">Preencha os dados da medição abaixo</p>
+            <h3 id="recordModalTitle" class="text-lg font-bold text-white">Novo Registro Completo</h3>
+            <p id="recordModalSubtitle" class="text-xs text-slate-400">Preencha o peso, medidas em cm e os dados da balança de bioimpedância</p>
           </div>
         </div>
         <button onclick="closeRecordModal()" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center">
@@ -388,19 +463,19 @@
         </button>
       </div>
 
-      <form id="recordForm" onsubmit="saveRecordForm(event)" class="mt-4 space-y-4">
+      <form id="recordForm" onsubmit="saveRecordForm(event)" class="mt-4 space-y-5">
         <input type="hidden" id="recordIdInput" />
 
         <!-- Quick fill helper -->
-        <div id="copyLastRecordHelper" class="flex items-center justify-between bg-slate-800/70 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-xs">
-          <span class="text-slate-300">Quer manter as medidas anteriores e só atualizar o que mudou?</span>
-          <button type="button" onclick="fillWithLastRecord()" class="px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 font-semibold transition">
-            <i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Repetir últimas medidas
+        <div id="copyLastRecordHelper" class="flex flex-wrap items-center justify-between gap-2 bg-slate-800/70 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-xs">
+          <span class="text-slate-300">Quer carregar os últimos valores de medidas e bioimpedância e alterar só o que mudou?</span>
+          <button type="button" onclick="fillWithLastRecord()" class="px-3 py-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 font-bold transition">
+            <i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Repetir últimos valores
           </button>
         </div>
 
         <!-- Primary Row: Date, Time, Weight -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-800/40 p-3.5 rounded-xl border border-slate-800">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-800/50 p-3.5 rounded-xl border border-slate-700/80">
           <div>
             <label class="block text-xs font-bold uppercase text-slate-300 mb-1">Dia (Data) *</label>
             <input type="date" id="recData" required class="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm font-semibold focus:outline-none focus:border-emerald-500" />
@@ -411,53 +486,106 @@
           </div>
           <div>
             <label class="block text-xs font-bold uppercase text-emerald-400 mb-1">Peso Nu (kg) *</label>
-            <input type="number" step="0.01" min="30" max="300" id="recPeso" required placeholder="Ex: 98.15" class="w-full px-3 py-2.5 rounded-xl bg-emerald-950/40 border border-emerald-500/50 text-white text-base font-extrabold focus:outline-none focus:border-emerald-400" />
+            <input type="number" step="0.01" min="30" max="300" id="recPeso" oninput="autoCalcImcIfNeeded()" required placeholder="Ex: 98.15" class="w-full px-3 py-2.5 rounded-xl bg-emerald-950/40 border border-emerald-500/50 text-white text-base font-extrabold focus:outline-none focus:border-emerald-400" />
           </div>
         </div>
 
-        <!-- Measurements Grid (8 fields in cm) -->
-        <div>
-          <div class="flex items-center justify-between mb-2">
-            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Medidas Corporais (em centímetros)</span>
-            <span class="text-[11px] text-slate-400">Aceita números inteiros ou decimais</span>
+        <!-- Section 1: Measurements Grid (8 fields in cm) -->
+        <div class="bg-slate-800/30 p-4 rounded-xl border border-slate-800 space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+              <i class="fa-solid fa-ruler-horizontal"></i> 1. Medidas Corporais (cm)
+            </span>
+            <span class="text-[11px] text-slate-400">Fita métrica</span>
           </div>
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div>
               <label class="block text-xs font-semibold text-slate-300 mb-1">Braço (cm)</label>
-              <input type="number" step="0.1" id="recBraco" required placeholder="35" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm font-semibold focus:outline-none focus:border-emerald-500" />
+              <input type="number" step="0.1" id="recBraco" placeholder="35" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm font-semibold focus:outline-none focus:border-emerald-500" />
             </div>
             <div>
               <label class="block text-xs font-semibold text-slate-300 mb-1">Antebraço (cm)</label>
-              <input type="number" step="0.1" id="recAntebraco" required placeholder="30" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm font-semibold focus:outline-none focus:border-emerald-500" />
+              <input type="number" step="0.1" id="recAntebraco" placeholder="30" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm font-semibold focus:outline-none focus:border-emerald-500" />
             </div>
             <div>
               <label class="block text-xs font-semibold text-slate-300 mb-1">Coxa (cm)</label>
-              <input type="number" step="0.1" id="recCoxa" required placeholder="65" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm font-semibold focus:outline-none focus:border-emerald-500" />
+              <input type="number" step="0.1" id="recCoxa" placeholder="65" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm font-semibold focus:outline-none focus:border-emerald-500" />
             </div>
             <div>
               <label class="block text-xs font-semibold text-slate-300 mb-1">Panturrilha (cm)</label>
-              <input type="number" step="0.1" id="recPanturrilha" required placeholder="44" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm font-semibold focus:outline-none focus:border-emerald-500" />
+              <input type="number" step="0.1" id="recPanturrilha" placeholder="44" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm font-semibold focus:outline-none focus:border-emerald-500" />
             </div>
             <div>
               <label class="block text-xs font-semibold text-slate-300 mb-1">Quadril (cm)</label>
-              <input type="number" step="0.1" id="recQuadril" required placeholder="113" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm font-semibold focus:outline-none focus:border-emerald-500" />
+              <input type="number" step="0.1" id="recQuadril" placeholder="113" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm font-semibold focus:outline-none focus:border-emerald-500" />
             </div>
             <div>
               <label class="block text-xs font-semibold text-slate-300 mb-1">Barriga (cm)</label>
-              <input type="number" step="0.1" id="recBarriga" required placeholder="110" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm font-semibold focus:outline-none focus:border-emerald-500" />
+              <input type="number" step="0.1" id="recBarriga" placeholder="110" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm font-semibold focus:outline-none focus:border-emerald-500" />
             </div>
             <div>
               <label class="block text-xs font-semibold text-slate-300 mb-1">Abdômen (cm)</label>
-              <input type="number" step="0.1" id="recAbdomen" required placeholder="105" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm font-semibold focus:outline-none focus:border-emerald-500" />
+              <input type="number" step="0.1" id="recAbdomen" placeholder="105" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm font-semibold focus:outline-none focus:border-emerald-500" />
             </div>
             <div>
               <label class="block text-xs font-semibold text-slate-300 mb-1">Peitoral (cm)</label>
-              <input type="number" step="0.1" id="recPeitoral" required placeholder="114" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm font-semibold focus:outline-none focus:border-emerald-500" />
+              <input type="number" step="0.1" id="recPeitoral" placeholder="114" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm font-semibold focus:outline-none focus:border-emerald-500" />
             </div>
           </div>
         </div>
 
-        <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
+        <!-- Section 2: Bioimpedance Smart Scale Fields -->
+        <div class="bg-emerald-950/20 p-4 rounded-xl border border-emerald-500/30 space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <span class="text-xs font-bold uppercase tracking-wider text-emerald-300 flex items-center gap-1.5">
+              <i class="fa-solid fa-heart-pulse"></i> 2. Dados da Balança de Bioimpedância (Opcional)
+            </span>
+            <button type="button" onclick="calcImcButton()" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-sky-300 border border-slate-700 text-[11px] font-semibold transition">
+              <i class="fa-solid fa-calculator mr-1"></i> Calcular IMC p/ 1,72m
+            </button>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">IMC</label>
+              <input type="number" step="0.1" id="recImc" placeholder="Ex: 33.2" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm font-semibold focus:outline-none focus:border-emerald-500" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Gordura Corporal (%)</label>
+              <input type="number" step="0.1" id="recGorduraCorporal" placeholder="Ex: 33.9" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm font-semibold focus:outline-none focus:border-emerald-500" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Água Corporal (%)</label>
+              <input type="number" step="0.1" id="recAgua" placeholder="Ex: 47.1" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm font-semibold focus:outline-none focus:border-emerald-500" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Proteína (%)</label>
+              <input type="number" step="0.1" id="recProteina" placeholder="Ex: 15.5" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm font-semibold focus:outline-none focus:border-emerald-500" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Metabolismo Basal (kcal)</label>
+              <input type="number" step="1" id="recMetabolismoBasal" placeholder="Ex: 1866" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm font-semibold focus:outline-none focus:border-emerald-500" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Gordura Visceral</label>
+              <input type="number" step="0.5" id="recGorduraVisceral" placeholder="Ex: 15" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm font-semibold focus:outline-none focus:border-emerald-500" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Músculo (kg)</label>
+              <input type="number" step="0.01" id="recMusculo" placeholder="Ex: 61.49" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm font-semibold focus:outline-none focus:border-emerald-500" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Massa Óssea (kg)</label>
+              <input type="number" step="0.01" id="recMassaOssea" placeholder="Ex: 3.30" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm font-semibold focus:outline-none focus:border-emerald-500" />
+            </div>
+            <div class="col-span-2 sm:col-span-1">
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Tipo de Corpo</label>
+              <input type="text" id="recTipoCorpo" placeholder="Grosso-conjunto" value="Grosso-conjunto" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm font-semibold focus:outline-none focus:border-emerald-500" />
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
           <button type="button" onclick="closeRecordModal()" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs sm:text-sm font-semibold">
             Cancelar
           </button>
@@ -471,18 +599,18 @@
   </div>
 
   <!-- ===================================================================== -->
-  <!-- MODAL 2: EDITAR META PRINCIPAL (31/12/2026 E MEDIDAS-ALVO) -->
+  <!-- MODAL 2: EDITAR META PRINCIPAL (31/12/2026 + MEDIDAS + BIOIMPEDÂNCIA) -->
   <!-- ===================================================================== -->
-  <div id="goalModal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-    <div class="bg-slate-900 border border-amber-500/40 rounded-2xl max-w-2xl w-full p-5 sm:p-6 shadow-2xl my-auto">
+  <div id="goalModal" class="fixed inset-0 z-50 hidden bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+    <div class="bg-slate-900 border border-amber-500/40 rounded-2xl max-w-3xl w-full p-5 sm:p-6 shadow-2xl my-auto max-h-[92vh] overflow-y-auto">
       <div class="flex items-center justify-between pb-4 border-b border-slate-800">
         <div class="flex items-center gap-2.5">
           <div class="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400">
             <i class="fa-solid fa-bullseye"></i>
           </div>
           <div>
-            <h3 class="text-lg font-bold text-white">Editar Meta de Peso e Medidas</h3>
-            <p class="text-xs text-slate-400">Personalize a data da meta, o peso-alvo e as medidas desejadas</p>
+            <h3 class="text-lg font-bold text-white">Editar Metas (31/12/2026)</h3>
+            <p class="text-xs text-slate-400">Personalize a meta de peso, medidas em cm e metas de bioimpedância</p>
           </div>
         </div>
         <button onclick="closeGoalModal()" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center">
@@ -502,8 +630,9 @@
           </div>
         </div>
 
-        <div>
-          <span class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Metas de Medidas Corporais (cm)</span>
+        <!-- Measurements Goals -->
+        <div class="bg-slate-800/40 p-4 rounded-xl border border-slate-800">
+          <span class="block text-xs font-bold uppercase tracking-wider text-emerald-400 mb-2.5">Metas de Medidas Corporais (cm)</span>
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div>
               <label class="block text-xs font-semibold text-slate-300 mb-1">Braço (cm)</label>
@@ -540,13 +669,52 @@
           </div>
         </div>
 
-        <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
+        <!-- Bioimpedance Goals -->
+        <div class="bg-slate-800/40 p-4 rounded-xl border border-slate-800">
+          <span class="block text-xs font-bold uppercase tracking-wider text-sky-400 mb-2.5">Metas de Bioimpedância (Balança)</span>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Meta IMC</label>
+              <input type="number" step="0.1" id="goalImc" required class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm font-semibold" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Meta Gordura (%)</label>
+              <input type="number" step="0.1" id="goalGorduraCorporal" required class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm font-semibold" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Meta Água (%)</label>
+              <input type="number" step="0.1" id="goalAgua" required class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm font-semibold" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Meta Proteína (%)</label>
+              <input type="number" step="0.1" id="goalProteina" required class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm font-semibold" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Meta Metab. (kcal)</label>
+              <input type="number" step="1" id="goalMetabolismoBasal" required class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm font-semibold" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Meta Gord. Visceral</label>
+              <input type="number" step="0.5" id="goalGorduraVisceral" required class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm font-semibold" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Meta Músculo (kg)</label>
+              <input type="number" step="0.01" id="goalMusculo" required class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm font-semibold" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Meta Massa Óssea</label>
+              <input type="number" step="0.01" id="goalMassaOssea" required class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm font-semibold" />
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
           <button type="button" onclick="closeGoalModal()" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs sm:text-sm font-semibold">
             Cancelar
           </button>
           <button type="submit" class="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs sm:text-sm font-bold shadow-lg flex items-center gap-2">
             <i class="fa-solid fa-floppy-disk"></i>
-            <span>Salvar Meta</span>
+            <span>Salvar Metas</span>
           </button>
         </div>
       </form>
@@ -554,9 +722,9 @@
   </div>
 
   <!-- ===================================================================== -->
-  <!-- MODAL 3: SINCRONIZAR PC & CELULAR / GITHUB PAGES / BACKUP -->
+  <!-- MODAL 3: SINCRONIZAR PC & CELULAR / GITHUB PAGES / BACKUP             -->
   <!-- ===================================================================== -->
-  <div id="syncModal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+  <div id="syncModal" class="fixed inset-0 z-50 hidden bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
     <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-2xl w-full p-5 sm:p-6 shadow-2xl my-auto space-y-5">
       <div class="flex items-center justify-between pb-3 border-b border-slate-800">
         <div class="flex items-center gap-2.5">
@@ -564,8 +732,8 @@
             <i class="fa-solid fa-cloud"></i>
           </div>
           <div>
-            <h3 class="text-lg font-bold text-white">Sincronização (PC + Celular) & GitHub</h3>
-            <p class="text-xs text-slate-400">Mantenha seus dados sempre atualizados entre o computador e o smartphone</p>
+            <h3 class="text-lg font-bold text-white">Sincronização (PC + Celular) & GitHub Pages</h3>
+            <p class="text-xs text-slate-400">Salve seus dados localmente, em nuvem ou em Planilha Google</p>
           </div>
         </div>
         <button onclick="closeSyncModal()" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center">
@@ -573,28 +741,15 @@
         </button>
       </div>
 
-      <!-- Cloud Sync Status -->
-      <div class="bg-slate-800/60 border border-slate-700 rounded-xl p-4 space-y-2">
-        <div class="flex items-center justify-between">
-          <span class="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
-            <i class="fa-solid fa-circle-check"></i> Sincronização Automática em Nuvem
-          </span>
-          <span id="modalCloudBadge" class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/20 text-emerald-300">Ativa</span>
-        </div>
-        <p class="text-xs text-slate-300 leading-relaxed">
-          Seus registros e metas são sincronizados automaticamente em tempo real. Além disso, para publicar no <strong>GitHub Pages</strong> e alimentar pelo PC e Celular usando sua própria Planilha Google gratuita, você pode conectar uma URL do Google Apps Script abaixo:
-        </p>
-      </div>
-
       <!-- Optional Google Apps Script Webhook for GitHub Pages -->
       <div class="bg-slate-800/40 border border-slate-700/80 rounded-xl p-4 space-y-3">
         <div class="flex items-center justify-between">
           <label class="text-xs font-bold uppercase text-sky-300 flex items-center gap-1.5">
             <i class="fa-brands fa-google-drive"></i>
-            <span>Integração Google Sheets (Para GitHub Pages)</span>
+            <span>Sincronizar PC e Celular via Google Planilhas (GitHub Pages)</span>
           </label>
           <button type="button" onclick="toggleAppsScriptHelp()" class="text-xs text-sky-400 underline hover:text-sky-300 font-semibold">
-            Ver código de 1 minuto
+            Como configurar (1 min)
           </button>
         </div>
         <div class="flex flex-col sm:flex-row gap-2">
@@ -604,21 +759,20 @@
           </button>
         </div>
 
-        <!-- Expandable instructions for Google Sheets Apps Script -->
         <div id="appsScriptHelpBox" class="hidden bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-300 space-y-2">
-          <p class="font-semibold text-white">Como conectar ao Google Planilhas (100% gratuito no GitHub Pages):</p>
+          <p class="font-semibold text-white">Passo a passo para ter nuvem gratuita no GitHub Pages:</p>
           <ol class="list-decimal list-inside space-y-1 text-slate-400">
-            <li>Crie uma Planilha Google em branco e clique em <strong>Extensões &gt; Apps Script</strong>.</li>
-            <li>Cole o código abaixo, clique em <strong>Implantar &gt; Nova implantação &gt; App da Web</strong> (Acesso: <em>Qualquer pessoa</em>).</li>
-            <li>Copie a URL gerada e cole no campo acima (no PC e no Celular).</li>
+            <li>Acesse <a href="https://sheets.new" target="_blank" class="text-sky-400 underline">sheets.new</a> e clique em <strong>Extensões &gt; Apps Script</strong>.</li>
+            <li>Apague tudo, cole o código abaixo e clique em <strong>Implantar &gt; Nova implantação &gt; App da Web</strong> (Quem pode acessar: <em>Qualquer pessoa</em>).</li>
+            <li>Copie a URL gerada e cole acima no computador e no celular.</li>
           </ol>
           <div class="relative">
             <pre id="appsScriptCode" class="bg-slate-900 p-2.5 rounded-lg text-[11px] text-emerald-300 overflow-x-auto">function doGet() {
-  var prop = PropertiesService.getScriptProperties().getProperty('ALAN_DATA');
+  var prop = PropertiesService.getScriptProperties().getProperty('ALAN_DATA_V2');
   return ContentService.createTextOutput(prop || '{}').setMimeType(ContentService.MimeType.JSON);
 }
 function doPost(e) {
-  PropertiesService.getScriptProperties().setProperty('ALAN_DATA', e.postData.contents);
+  PropertiesService.getScriptProperties().setProperty('ALAN_DATA_V2', e.postData.contents);
   return ContentService.createTextOutput('{"ok":true}').setMimeType(ContentService.MimeType.JSON);
 }</pre>
             <button type="button" onclick="copyAppsScriptCode()" class="absolute top-2 right-2 px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-[10px] font-bold">
@@ -630,13 +784,13 @@ function doPost(e) {
 
       <!-- Export / Import / Restore Default Data -->
       <div class="space-y-2">
-        <span class="block text-xs font-bold uppercase tracking-wider text-slate-400">Exportar, Importar e Backup da Planilha</span>
+        <span class="block text-xs font-bold uppercase tracking-wider text-slate-400">Exportar Planilha Completa (Medidas + Bioimpedância) e Backup</span>
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
           <button type="button" onclick="exportToCSV()" class="p-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-left flex items-center gap-3 transition">
             <i class="fa-solid fa-file-csv text-emerald-400 text-xl"></i>
             <div>
-              <div class="text-xs font-bold text-white">Baixar Planilha (.CSV)</div>
-              <div class="text-[11px] text-slate-400">Abre direto no Excel</div>
+              <div class="text-xs font-bold text-white">Baixar Excel (.CSV)</div>
+              <div class="text-[11px] text-slate-400">Medidas + Bioimpedância</div>
             </div>
           </button>
 
@@ -644,7 +798,7 @@ function doPost(e) {
             <i class="fa-solid fa-download text-sky-400 text-xl"></i>
             <div>
               <div class="text-xs font-bold text-white">Exportar Backup (.JSON)</div>
-              <div class="text-[11px] text-slate-400">Salvar cópia completa</div>
+              <div class="text-[11px] text-slate-400">Enviar p/ outro aparelho</div>
             </div>
           </button>
 
@@ -652,7 +806,7 @@ function doPost(e) {
             <i class="fa-solid fa-upload text-amber-400 text-xl"></i>
             <div>
               <div class="text-xs font-bold text-white">Importar Backup (.JSON)</div>
-              <div class="text-[11px] text-slate-400">Carregar de outro aparelho</div>
+              <div class="text-[11px] text-slate-400">Carregar arquivo salvo</div>
             </div>
             <input type="file" accept=".json" onchange="importFromJSON(event)" class="hidden" />
           </label>
@@ -662,7 +816,7 @@ function doPost(e) {
       <div class="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-800">
         <button type="button" onclick="openRestoreConfirmModal()" class="text-xs text-rose-400 hover:text-rose-300 font-semibold flex items-center gap-1.5">
           <i class="fa-solid fa-rotate-left"></i>
-          <span>Restaurar dados originais da planilha</span>
+          <span>Restaurar planilha e bioimpedância originais do Alan</span>
         </button>
         <button type="button" onclick="closeSyncModal()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold">
           Fechar
@@ -672,9 +826,9 @@ function doPost(e) {
   </div>
 
   <!-- ===================================================================== -->
-  <!-- MODAL 4: CONFIRMAÇÃO DE EXCLUSÃO / RESTAURAÇÃO (NO BROWSER ALERTS) -->
+  <!-- MODAL 4: CONFIRMAÇÃO DE EXCLUSÃO / RESTAURAÇÃO                        -->
   <!-- ===================================================================== -->
-  <div id="confirmModal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+  <div id="confirmModal" class="fixed inset-0 z-50 hidden bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full p-5 shadow-2xl space-y-4">
       <div class="flex items-center gap-3">
         <div class="w-10 h-10 rounded-xl bg-rose-500/20 border border-rose-500/40 flex items-center justify-center text-rose-400">
@@ -700,19 +854,23 @@ function doPost(e) {
   <div id="toastContainer" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 pointer-events-none flex flex-col items-center gap-2"></div>
 
   <!-- ===================================================================== -->
-  <!-- APPLICATION LOGIC & FIREBASE CLOUD SYNC -->
+  <!-- APPLICATION LOGIC, BIOIMPEDANCE ENGINE & CLOUD/LOCAL STORAGE          -->
   <!-- ===================================================================== -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+    const STORAGE_KEY = "alan_tracker_v2_data";
+    const ALAN_HEIGHT_M = 1.72; // 1.72m matches 100kg -> BMI 33.8 and 98.15kg -> BMI 33.2
+
     // -----------------------------------------------------------------------
-    // 1. INITIAL DATA FROM ALAN'S SPREADSHEET
+    // 1. INITIAL DATA FROM ALAN'S SPREADSHEET + 4 SMART SCALE SCREENSHOTS
     // -----------------------------------------------------------------------
     const INITIAL_GOAL = {
       dataMeta: "2026-12-31",
       peso: 93.00,
+      // Measurements (cm)
       braco: 35,
       antebraco: 27,
       coxa: 65,
@@ -720,7 +878,16 @@ function doPost(e) {
       quadril: 109,
       barriga: 109,
       abdomen: 95,
-      peitoral: 113
+      peitoral: 113,
+      // Bioimpedance Goals
+      imc: 31.4,
+      gorduraCorporal: 28.0,
+      agua: 50.0,
+      proteina: 16.5,
+      metabolismoBasal: 1900,
+      gorduraVisceral: 12,
+      musculo: 62.00,
+      massaOssea: 3.30
     };
 
     const INITIAL_RECORDS = [
@@ -736,7 +903,17 @@ function doPost(e) {
         quadril: 115,
         barriga: 115,
         abdomen: 105,
-        peitoral: 116
+        peitoral: 116,
+        // Bioimpedância (Foto: 6 de outubro 18:57)
+        imc: 33.8,
+        gorduraCorporal: 34.5,
+        agua: 46.7,
+        proteina: 15.3,
+        metabolismoBasal: 1903,
+        gorduraVisceral: 15,
+        musculo: 62.15,
+        massaOssea: 3.33,
+        tipoCorpo: "Grosso-conjunto"
       },
       {
         id: "reg-2026-10-13",
@@ -750,7 +927,17 @@ function doPost(e) {
         quadril: 112,
         barriga: 112,
         abdomen: 105,
-        peitoral: 115
+        peitoral: 115,
+        // Bioimpedância vazia (editável a qualquer momento)
+        imc: null,
+        gorduraCorporal: null,
+        agua: null,
+        proteina: null,
+        metabolismoBasal: null,
+        gorduraVisceral: null,
+        musculo: null,
+        massaOssea: null,
+        tipoCorpo: "Grosso-conjunto"
       },
       {
         id: "reg-2026-10-20",
@@ -764,7 +951,17 @@ function doPost(e) {
         quadril: 113,
         barriga: 112,
         abdomen: 105,
-        peitoral: 116
+        peitoral: 116,
+        // Bioimpedância (Foto: 20 de outubro 21:45)
+        imc: 34.0,
+        gorduraCorporal: 34.9,
+        agua: 46.4,
+        proteina: 15.2,
+        metabolismoBasal: 1912,
+        gorduraVisceral: 15,
+        musculo: 62.14,
+        massaOssea: 3.33,
+        tipoCorpo: "Grosso-conjunto"
       },
       {
         id: "reg-2026-10-27",
@@ -778,7 +975,17 @@ function doPost(e) {
         quadril: 113,
         barriga: 112,
         abdomen: 104,
-        peitoral: 115
+        peitoral: 115,
+        // Bioimpedância (Foto: 27 de outubro 10:26)
+        imc: 33.4,
+        gorduraCorporal: 34.2,
+        agua: 46.9,
+        proteina: 15.4,
+        metabolismoBasal: 1886,
+        gorduraVisceral: 15,
+        musculo: 61.70,
+        massaOssea: 3.31,
+        tipoCorpo: "Grosso-conjunto"
       },
       {
         id: "reg-2026-11-03",
@@ -792,23 +999,44 @@ function doPost(e) {
         quadril: 113,
         barriga: 110,
         abdomen: 105,
-        peitoral: 114
+        peitoral: 114,
+        // Bioimpedância (Foto: 3 de novembro 10:28)
+        imc: 33.2,
+        gorduraCorporal: 33.9,
+        agua: 47.1,
+        proteina: 15.5,
+        metabolismoBasal: 1866,
+        gorduraVisceral: 15,
+        musculo: 61.49,
+        massaOssea: 3.30,
+        tipoCorpo: "Grosso-conjunto"
       }
     ];
 
     const MEASUREMENT_KEYS = [
-      { key: "braco", label: "Braço" },
-      { key: "antebraco", label: "Antebraço" },
-      { key: "coxa", label: "Coxa" },
-      { key: "panturrilha", label: "Panturrilha" },
-      { key: "quadril", label: "Quadril" },
-      { key: "barriga", label: "Barriga" },
-      { key: "abdomen", label: "Abdômen" },
-      { key: "peitoral", label: "Peitoral" }
+      { key: "braco", label: "Braço", unit: "cm" },
+      { key: "antebraco", label: "Antebraço", unit: "cm" },
+      { key: "coxa", label: "Coxa", unit: "cm" },
+      { key: "panturrilha", label: "Panturrilha", unit: "cm" },
+      { key: "quadril", label: "Quadril", unit: "cm" },
+      { key: "barriga", label: "Barriga", unit: "cm" },
+      { key: "abdomen", label: "Abdômen", unit: "cm" },
+      { key: "peitoral", label: "Peitoral", unit: "cm" }
+    ];
+
+    const BIO_KEYS = [
+      { key: "imc", label: "IMC", shortLabel: "IMC", unit: "", decimals: 1, icon: "fa-flask", lowerIsBetter: true },
+      { key: "gorduraCorporal", label: "Gordura corporal", shortLabel: "Gordura", unit: "%", decimals: 1, icon: "fa-drumstick-bite", lowerIsBetter: true },
+      { key: "agua", label: "Água", shortLabel: "Água", unit: "%", decimals: 1, icon: "fa-droplet", lowerIsBetter: false },
+      { key: "proteina", label: "Proteína", shortLabel: "Proteína", unit: "%", decimals: 1, icon: "fa-egg", lowerIsBetter: false },
+      { key: "metabolismoBasal", label: "Metabolismo basal", shortLabel: "Metab. Basal", unit: "kcal", decimals: 0, icon: "fa-filter", lowerIsBetter: false },
+      { key: "gorduraVisceral", label: "Gordura visceral", shortLabel: "Gord. Visc.", unit: "", decimals: 0, icon: "fa-stomach", lowerIsBetter: true },
+      { key: "musculo", label: "Músculo", shortLabel: "Músculo", unit: "kg", decimals: 2, icon: "fa-dumbbell", lowerIsBetter: false },
+      { key: "massaOssea", label: "Massa óssea", shortLabel: "Massa Óssea", unit: "kg", decimals: 2, icon: "fa-bone", lowerIsBetter: false }
     ];
 
     // -----------------------------------------------------------------------
-    // 2. APPLICATION STATE
+    // 2. APPLICATION STATE & AUTOMATIC MIGRATION
     // -----------------------------------------------------------------------
     let appState = {
       goal: structuredClone(INITIAL_GOAL),
@@ -818,26 +1046,102 @@ function doPost(e) {
 
     let inlineEditMode = false;
     let currentViewMode = "table"; // 'table' or 'cards'
+    let tableColumnFilter = "all"; // 'all', 'measures', 'bio'
+    let weightChartInstance = null;
+    let metricChartInstance = null;
+
     let db = null;
     let auth = null;
     let currentUser = null;
     let appId = typeof __app_id !== "undefined" ? __app_id : "controle-peso-alan";
 
+    // Merge initial bioimpedance fields if older records don't have them
+    function ensureBioimpedanceFieldsMerged(dataObj) {
+      if (!dataObj) return structuredClone({ goal: INITIAL_GOAL, records: INITIAL_RECORDS, webhookUrl: "" });
+
+      const mergedGoal = { ...structuredClone(INITIAL_GOAL), ...(dataObj.goal || {}) };
+      const initialMap = new Map(INITIAL_RECORDS.map((r) => [r.data, r]));
+
+      const mergedRecords = (dataObj.records || INITIAL_RECORDS).map((rec) => {
+        const seed = initialMap.get(rec.data);
+        if (seed) {
+          return {
+            ...seed,
+            ...rec,
+            // Ensure seed bioimpedance shows up if rec had undefined
+            imc: rec.imc !== undefined ? rec.imc : seed.imc,
+            gorduraCorporal: rec.gorduraCorporal !== undefined ? rec.gorduraCorporal : seed.gorduraCorporal,
+            agua: rec.agua !== undefined ? rec.agua : seed.agua,
+            proteina: rec.proteina !== undefined ? rec.proteina : seed.proteina,
+            metabolismoBasal: rec.metabolismoBasal !== undefined ? rec.metabolismoBasal : seed.metabolismoBasal,
+            gorduraVisceral: rec.gorduraVisceral !== undefined ? rec.gorduraVisceral : seed.gorduraVisceral,
+            musculo: rec.musculo !== undefined ? rec.musculo : seed.musculo,
+            massaOssea: rec.massaOssea !== undefined ? rec.massaOssea : seed.massaOssea,
+            tipoCorpo: rec.tipoCorpo || seed.tipoCorpo || "Grosso-conjunto"
+          };
+        }
+        return {
+          imc: null,
+          gorduraCorporal: null,
+          agua: null,
+          proteina: null,
+          metabolismoBasal: null,
+          gorduraVisceral: null,
+          musculo: null,
+          massaOssea: null,
+          tipoCorpo: "Grosso-conjunto",
+          ...rec
+        };
+      });
+
+      return {
+        goal: mergedGoal,
+        records: sortRecordsChronologically(mergedRecords),
+        webhookUrl: dataObj.webhookUrl || ""
+      };
+    }
+
+    function loadFromLocalStorage() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          appState = ensureBioimpedanceFieldsMerged(parsed);
+        } else {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+        }
+      } catch (e) {
+        console.warn("Aviso ao acessar localStorage:", e);
+      }
+    }
+
+    function saveToLocalStorage() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+      } catch (e) {
+        console.warn("Aviso ao gravar no localStorage:", e);
+      }
+    }
+
     // -----------------------------------------------------------------------
-    // 3. FORMATTING HELPERS
+    // 3. FORMATTING & BIOIMPEDANCE STATUS EVALUATOR (SCALE APP LOGIC)
     // -----------------------------------------------------------------------
+    function formatNum(val, decimals = 2) {
+      if (val === null || val === undefined || val === "" || isNaN(Number(val))) return "--";
+      return Number(val).toLocaleString("pt-BR", {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals
+      });
+    }
+
     function formatWeight(val) {
-      const num = Number(val);
-      if (isNaN(num)) return "0,00";
-      return num.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      return formatNum(val, 2);
     }
 
     function formatMeasure(val) {
+      if (val === null || val === undefined || val === "" || isNaN(Number(val))) return "--";
       const num = Number(val);
-      if (isNaN(num)) return "0";
-      return Number.isInteger(num)
-        ? num.toString()
-        : num.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+      return Number.isInteger(num) ? num.toString() : formatNum(num, 1);
     }
 
     function formatDateBR(isoDate) {
@@ -853,6 +1157,43 @@ function doPost(e) {
         const dtB = `${b.data || ""}T${b.hora || "00:00"}`;
         return dtA.localeCompare(dtB);
       });
+    }
+
+    // Evaluates the exact status badge shown on Alan's Smart Scale App
+    function getBioMetricStatus(key, rawValue) {
+      if (rawValue === null || rawValue === undefined || rawValue === "" || isNaN(Number(rawValue))) {
+        return { label: "Sem leitura", tone: "slate", achieved: false };
+      }
+      const val = Number(rawValue);
+      switch (key) {
+        case "imc":
+          if (val >= 25) return { label: "Alto", tone: "amber", achieved: false };
+          if (val < 18.5) return { label: "Baixo", tone: "amber", achieved: false };
+          return { label: "Normal", tone: "emerald", achieved: true };
+        case "gorduraCorporal":
+          if (val >= 25) return { label: "Alto", tone: "amber", achieved: false };
+          return { label: "Normal", tone: "emerald", achieved: true };
+        case "agua":
+          if (val < 50) return { label: "Insuficiente", tone: "amber", achieved: false };
+          return { label: "Normal", tone: "emerald", achieved: true };
+        case "proteina":
+          if (val < 16) return { label: "Insuficiente", tone: "amber", achieved: false };
+          return { label: "Normal", tone: "emerald", achieved: true };
+        case "metabolismoBasal":
+          if (val >= 1700) return { label: "Objetivo atingido", tone: "sky", achieved: false };
+          return { label: "Baixo", tone: "amber", achieved: false };
+        case "gorduraVisceral":
+          if (val >= 10) return { label: "Alto", tone: "amber", achieved: false };
+          return { label: "Normal", tone: "emerald", achieved: true };
+        case "musculo":
+          if (val >= 55) return { label: "Ótimo", tone: "emerald", achieved: true };
+          return { label: "Normal", tone: "emerald", achieved: true };
+        case "massaOssea":
+          if (val >= 2.8) return { label: "Normal", tone: "emerald", achieved: true };
+          return { label: "Insuficiente", tone: "amber", achieved: false };
+        default:
+          return { label: "Normal", tone: "emerald", achieved: true };
+      }
     }
 
     function showToast(message, type = "success") {
@@ -876,9 +1217,12 @@ function doPost(e) {
     }
 
     // -----------------------------------------------------------------------
-    // 4. CLOUD PERSISTENCE (FIREBASE FIRESTORE + WEBHOOK SYNC)
+    // 4. CLOUD PERSISTENCE (LOCALSTORAGE + FIREBASE FIRESTORE + WEBHOOK)
     // -----------------------------------------------------------------------
     async function initCloudSync() {
+      loadFromLocalStorage();
+      renderAll();
+
       try {
         if (typeof __firebase_config !== "undefined" && __firebase_config) {
           const firebaseConfig = JSON.parse(__firebase_config);
@@ -886,84 +1230,64 @@ function doPost(e) {
           auth = getAuth(app);
           db = getFirestore(app);
 
-          // RULE 3: Authenticate FIRST before any Firestore operation
           if (typeof __initial_auth_token !== "undefined" && __initial_auth_token) {
             await signInWithCustomToken(auth, __initial_auth_token);
           } else {
             await signInAnonymously(auth);
           }
           currentUser = auth.currentUser;
-
           if (!currentUser) return;
 
-          // RULE 1: Strict Path `/artifacts/{appId}/public/data/{collectionName}`
-          const docRef = doc(db, "artifacts", appId, "public", "data", "alan_weight_records", "main_sheet");
+          const docRef = doc(db, "artifacts", appId, "public", "data", "alan_weight_records", "main_sheet_v2");
 
           onSnapshot(
             docRef,
             async (snapshot) => {
               if (snapshot.exists()) {
-                const data = snapshot.data();
-                if (data && data.goal && Array.isArray(data.records)) {
-                  appState.goal = data.goal;
-                  appState.records = sortRecordsChronologically(data.records);
-                  if (data.webhookUrl) {
-                    appState.webhookUrl = data.webhookUrl;
+                const cloudData = snapshot.data();
+                if (cloudData && cloudData.goal && Array.isArray(cloudData.records)) {
+                  appState = ensureBioimpedanceFieldsMerged(cloudData);
+                  saveToLocalStorage();
+                  if (appState.webhookUrl) {
                     const whInput = document.getElementById("webhookUrlInput");
-                    if (whInput) whInput.value = data.webhookUrl;
+                    if (whInput) whInput.value = appState.webhookUrl;
                   }
-                  updateSyncUI("Sincronizado em Nuvem (PC & Celular)", true);
+                  document.getElementById("syncStatusText").textContent = "Sincronizado em Nuvem (PC & Celular)";
                   renderAll();
                 }
               } else {
-                // First run: seed Firestore with Alan's spreadsheet data
-                await persistStateToCloud(false);
+                await persistState(false);
               }
             },
-            (error) => {
-              console.error("Erro na leitura em tempo real:", error);
-              updateSyncUI("Modo Offline Ativo", false);
+            (err) => {
+              console.warn("Modo local ativo:", err);
             }
           );
-        } else {
-          updateSyncUI("Pronto (GitHub Pages / Memória)", true);
         }
       } catch (err) {
-        console.error("Aviso ao inicializar nuvem:", err);
-        updateSyncUI("Modo Local Ativo", false);
+        console.warn("Inicialização local concluída:", err);
       }
     }
 
-    function updateSyncUI(text, isOnline) {
-      const statusText = document.getElementById("syncStatusText");
-      const badge = document.getElementById("modalCloudBadge");
-      if (statusText) statusText.textContent = text;
-      if (badge) {
-        badge.textContent = isOnline ? "Conectado" : "Local";
-      }
-    }
-
-    async function persistStateToCloud(showNotification = true) {
+    async function persistState(showNotification = true) {
       appState.records = sortRecordsChronologically(appState.records);
+      saveToLocalStorage();
       renderAll();
 
-      // 1. Save to Firestore if authenticated
       if (db && currentUser) {
         try {
-          const docRef = doc(db, "artifacts", appId, "public", "data", "alan_weight_records", "main_sheet");
+          const docRef = doc(db, "artifacts", appId, "public", "data", "alan_weight_records", "main_sheet_v2");
           await setDoc(docRef, {
             goal: appState.goal,
             records: appState.records,
             webhookUrl: appState.webhookUrl || "",
             updatedAt: new Date().toISOString()
           });
-          updateSyncUI("Salvo na Nuvem", true);
-        } catch (err) {
-          console.error("Erro ao salvar no Firestore:", err);
+        } catch (e) {
+          console.warn("Erro ao salvar no Firestore:", e);
         }
       }
 
-      // 2. Also sync with Google Apps Script Webhook if configured
       if (appState.webhookUrl && appState.webhookUrl.startsWith("http")) {
         try {
           await fetch(appState.webhookUrl, {
@@ -977,21 +1301,23 @@ function doPost(e) {
             })
           });
         } catch (e) {
-          console.error("Falha ao enviar para Google Sheets:", e);
+          console.warn("Falha no envio ao Google Sheets:", e);
         }
       }
 
       if (showNotification) {
-        showToast("Dados atualizados e salvos!");
+        showToast("Alterações salvas com sucesso!");
       }
     }
 
     // -----------------------------------------------------------------------
-    // 5. RENDER DASHBOARD, GOAL HERO, TABLE, CARDS & CHARTS
+    // 5. RENDER ALL SECTIONS
     // -----------------------------------------------------------------------
     function renderAll() {
       appState.records = sortRecordsChronologically(appState.records);
       renderHeroGoal();
+      populateBioSelectors();
+      renderBioDashboard();
       renderTableAndCards();
       renderCharts();
     }
@@ -1003,7 +1329,6 @@ function doPost(e) {
       const lastRec = records.length > 0 ? records[records.length - 1] : null;
       const prevRec = records.length > 1 ? records[records.length - 2] : null;
 
-      // Goal Date & Weight
       document.getElementById("goalDateDisplay").textContent = formatDateBR(goal.dataMeta);
       document.getElementById("goalDateShortLabel").textContent = formatDateBR(goal.dataMeta);
       document.getElementById("goalWeightDisplay").innerHTML = `${formatWeight(goal.peso)} <small class="text-2xl font-bold text-emerald-400">kg</small>`;
@@ -1011,20 +1336,13 @@ function doPost(e) {
       document.getElementById("chartGoalWeightText").textContent = `${formatWeight(goal.peso)} kg`;
       document.getElementById("chartBadgeGoal").textContent = `${formatWeight(goal.peso)} kg`;
 
-      // Days remaining calculation
+      // Days remaining
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const targetDate = new Date(`${goal.dataMeta}T00:00:00`);
-      const diffTime = targetDate - today;
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      const diffDays = Math.ceil((targetDate - today) / (1000 * 60 * 60 * 24));
       const daysBadge = document.getElementById("daysRemainingBadge");
-      if (diffDays > 0) {
-        daysBadge.textContent = `Faltam ${diffDays} dias`;
-      } else if (diffDays === 0) {
-        daysBadge.textContent = `Meta é hoje!`;
-      } else {
-        daysBadge.textContent = `Prazo concluído`;
-      }
+      daysBadge.textContent = diffDays > 0 ? `Faltam ${diffDays} dias para ${formatDateBR(goal.dataMeta)}` : "Prazo da Meta";
 
       if (firstRec && lastRec) {
         const initialW = Number(firstRec.peso);
@@ -1033,21 +1351,30 @@ function doPost(e) {
 
         document.getElementById("initialWeightLabel").textContent = `${formatWeight(initialW)} kg`;
         document.getElementById("currentWeightCard").textContent = formatWeight(currentW);
-        document.getElementById("lastRecordDateCard").textContent = `Em ${formatDateBR(lastRec.data)} às ${lastRec.hora}`;
+        document.getElementById("lastRecordDateCard").textContent = `${formatDateBR(lastRec.data)} às ${lastRec.hora}`;
 
-        // Total Eliminated since first record
         const totalDiff = currentW - initialW;
         const totalLostEl = document.getElementById("totalLostCard");
         totalLostEl.textContent = `${totalDiff > 0 ? "+" : ""}${formatWeight(totalDiff)}`;
         totalLostEl.className = `text-2xl sm:text-3xl font-extrabold ${totalDiff <= 0 ? "text-emerald-400" : "text-rose-400"}`;
 
-        // Last weigh-in delta
         if (prevRec) {
           const lastDelta = currentW - Number(prevRec.peso);
-          const sign = lastDelta > 0 ? "+" : "";
-          document.getElementById("lastDeltaCard").textContent = `Última pesagem: ${sign}${formatWeight(lastDelta)} kg`;
-        } else {
-          document.getElementById("lastDeltaCard").textContent = `Primeira medição registrada`;
+          document.getElementById("lastDeltaCard").textContent = `Última: ${lastDelta > 0 ? "+" : ""}${formatWeight(lastDelta)} kg`;
+        }
+
+        // Body Fat Card in Hero
+        const latestWithBio = [...records].reverse().find((r) => r.gorduraCorporal !== null && r.gorduraCorporal !== undefined);
+        const firstWithBio = records.find((r) => r.gorduraCorporal !== null && r.gorduraCorporal !== undefined);
+        if (latestWithBio) {
+          document.getElementById("currentFatCard").textContent = formatNum(latestWithBio.gorduraCorporal, 1);
+          if (firstWithBio && firstWithBio.id !== latestWithBio.id) {
+            const fatPctDiff = Number(latestWithBio.gorduraCorporal) - Number(firstWithBio.gorduraCorporal);
+            const initialFatKg = (Number(firstWithBio.peso) * Number(firstWithBio.gorduraCorporal)) / 100;
+            const currentFatKg = (Number(latestWithBio.peso) * Number(latestWithBio.gorduraCorporal)) / 100;
+            const fatKgDiff = currentFatKg - initialFatKg;
+            document.getElementById("fatDeltaCard").textContent = `${fatPctDiff > 0 ? "+" : ""}${formatNum(fatPctDiff, 1)}% (${fatKgDiff > 0 ? "+" : ""}${formatNum(fatKgDiff, 2)} kg)`;
+          }
         }
 
         // Remaining to Goal
@@ -1058,30 +1385,21 @@ function doPost(e) {
           remEl.textContent = formatWeight(remaining);
           remSub.textContent = `Para atingir ${formatWeight(goalW)} kg`;
         } else {
-          remEl.textContent = "META BATIDA!";
-          remSub.textContent = `Abaixo de ${formatWeight(goalW)} kg`;
+          remEl.textContent = "BATIDA!";
+          remSub.textContent = `Meta de ${formatWeight(goalW)} kg alcançada`;
         }
 
-        // Progress Bar Percentage
         const totalToLose = initialW - goalW;
-        let pct = 0;
-        if (totalToLose > 0) {
-          pct = ((initialW - currentW) / totalToLose) * 100;
-        } else if (currentW <= goalW) {
-          pct = 100;
-        }
+        const pct = totalToLose > 0 ? ((initialW - currentW) / totalToLose) * 100 : 100;
         const clampedPct = Math.max(0, Math.min(100, pct));
         document.getElementById("goalProgressBar").style.width = `${clampedPct.toFixed(1)}%`;
         document.getElementById("goalProgressPercentLabel").textContent = `${clampedPct.toFixed(1).replace(".", ",")}% da meta concluída`;
 
-        // Weekly pace suggestion
         const paceEl = document.getElementById("weeklyPaceText");
         if (remaining > 0 && diffDays > 0) {
           const weeksLeft = Math.max(1, diffDays / 7);
           const kgPerWeek = remaining / weeksLeft;
           paceEl.innerHTML = `<i class="fa-solid fa-bolt text-amber-400 mr-1"></i> Ritmo necessário até ${formatDateBR(goal.dataMeta)}: <strong>-${formatWeight(kgPerWeek)} kg/semana</strong>`;
-        } else if (remaining <= 0) {
-          paceEl.innerHTML = `<i class="fa-solid fa-star text-amber-400 mr-1"></i> Parabéns, Alan! Você já alcançou a meta de peso!`;
         } else {
           paceEl.textContent = "";
         }
@@ -1096,23 +1414,19 @@ function doPost(e) {
         const initialVal = firstRec ? Number(firstRec[key]) : 0;
         const diffToGoal = currentVal - targetVal;
         const diffFromStart = currentVal - initialVal;
-
         const isReached = diffToGoal <= 0;
-        const statusColor = isReached
-          ? "border-emerald-500/40 bg-emerald-950/25"
-          : "border-slate-700/80 bg-slate-900/70";
 
         const card = document.createElement("div");
-        card.className = `rounded-xl p-2.5 border ${statusColor} flex flex-col justify-between transition hover:border-emerald-500/50 cursor-pointer`;
-        card.onclick = () => openGoalModal();
-        card.title = "Clique para editar a meta desta medida";
-
+        card.className = `rounded-xl p-2.5 border ${
+          isReached ? "border-emerald-500/40 bg-emerald-950/25" : "border-slate-700/80 bg-slate-900/75"
+        } flex flex-col justify-between transition hover:border-emerald-500/50 cursor-pointer`;
+        card.onclick = () => window.openGoalModal();
         card.innerHTML = `
           <div class="flex items-center justify-between text-[11px] font-bold text-slate-400 uppercase">
             <span>${label}</span>
             ${
               isReached
-                ? '<span class="text-emerald-400" title="Meta atingida!"><i class="fa-solid fa-check-circle"></i></span>'
+                ? '<span class="text-emerald-400"><i class="fa-solid fa-check-circle"></i> OK</span>'
                 : `<span class="text-amber-300">-${formatMeasure(diffToGoal)} cm</span>`
             }
           </div>
@@ -1121,9 +1435,7 @@ function doPost(e) {
               <span class="text-base sm:text-lg font-extrabold text-white">${formatMeasure(currentVal)}</span>
               <span class="text-[10px] text-slate-400">cm</span>
             </div>
-            <div class="text-[11px] text-emerald-400 font-semibold">
-              Meta: ${formatMeasure(targetVal)}
-            </div>
+            <div class="text-[11px] text-emerald-400 font-semibold">Meta: ${formatMeasure(targetVal)}</div>
           </div>
           <div class="text-[10px] text-slate-400 flex items-center justify-between border-t border-slate-800/80 pt-1">
             <span>Início: ${formatMeasure(initialVal)}</span>
@@ -1137,25 +1449,226 @@ function doPost(e) {
     }
 
     // -----------------------------------------------------------------------
-    // 6. RENDER SPREADSHEET TABLE (WITH INLINE EDITING) & MOBILE CARDS
+    // 6. BIOIMPEDANCE SMART SCALE DASHBOARD RENDERER
     // -----------------------------------------------------------------------
+    function populateBioSelectors() {
+      const curSelect = document.getElementById("bioCurrentSelect");
+      const cmpSelect = document.getElementById("bioCompareSelect");
+      if (!curSelect || !cmpSelect) return;
+
+      const prevCurVal = curSelect.value;
+      const prevCmpVal = cmpSelect.value;
+
+      curSelect.innerHTML = "";
+      cmpSelect.innerHTML = "";
+
+      const records = appState.records;
+      records.forEach((r) => {
+        const hasBio = r.imc !== null && r.imc !== undefined && r.imc !== "";
+        const label = `${formatDateBR(r.data)} (${formatWeight(r.peso)} kg)${hasBio ? " • Bio OK" : " • Sem Bio"}`;
+        curSelect.add(new Option(label, r.id));
+        cmpSelect.add(new Option(label, r.id));
+      });
+
+      if (records.length > 0) {
+        // Default current: latest record with bioimpedance (e.g. 03/11/2026)
+        const latestBio = [...records].reverse().find((r) => r.imc !== null && r.imc !== undefined) || records[records.length - 1];
+        curSelect.value = records.some((r) => r.id === prevCurVal) ? prevCurVal : latestBio.id;
+
+        // Default compare: first record with bioimpedance (e.g. 06/10/2026)
+        const firstBio = records.find((r) => r.imc !== null && r.imc !== undefined) || records[0];
+        cmpSelect.value = records.some((r) => r.id === prevCmpVal) ? prevCmpVal : firstBio.id;
+      }
+    }
+
+    window.renderBioDashboard = function () {
+      const curId = document.getElementById("bioCurrentSelect")?.value;
+      const cmpId = document.getElementById("bioCompareSelect")?.value;
+      const curRec = appState.records.find((r) => r.id === curId) || appState.records[appState.records.length - 1];
+      const cmpRec = appState.records.find((r) => r.id === cmpId) || appState.records[0];
+
+      const summaryContainer = document.getElementById("bioSummaryBanner");
+      const grid = document.getElementById("bioMetricsGrid");
+      if (!curRec || !summaryContainer || !grid) return;
+
+      document.getElementById("bioBodyTypeBadge").textContent = `Tipo: ${curRec.tipoCorpo || "Grosso-conjunto"}`;
+
+      const weightDelta = cmpRec ? Number(curRec.peso) - Number(cmpRec.peso) : 0;
+      const fatKgCur = curRec.gorduraCorporal ? (Number(curRec.peso) * Number(curRec.gorduraCorporal)) / 100 : null;
+      const fatKgCmp = cmpRec && cmpRec.gorduraCorporal ? (Number(cmpRec.peso) * Number(cmpRec.gorduraCorporal)) / 100 : null;
+      const fatKgDelta = fatKgCur !== null && fatKgCmp !== null ? fatKgCur - fatKgCmp : null;
+
+      // Summary Banner matching the top of the Smart Scale App
+      summaryContainer.innerHTML = `
+        <div class="bg-slate-900/85 border border-emerald-500/30 rounded-xl p-3.5 flex items-center justify-between">
+          <div>
+            <span class="text-[11px] font-bold uppercase text-emerald-400 block">Pesagem na Balança (${formatDateBR(curRec.data)})</span>
+            <div class="text-2xl font-black text-white mt-0.5">${formatWeight(curRec.peso)} kg</div>
+            <span class="text-xs text-slate-400">Comparado a ${formatDateBR(cmpRec.data)}: <strong class="${weightDelta <= 0 ? "text-emerald-400" : "text-rose-400"}">${weightDelta > 0 ? "+" : ""}${formatWeight(weightDelta)} kg</strong></span>
+          </div>
+          <div class="w-11 h-11 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-300 text-xl">
+            <i class="fa-solid fa-gauge-high"></i>
+          </div>
+        </div>
+
+        <div class="bg-slate-900/85 border border-emerald-500/30 rounded-xl p-3.5 flex items-center justify-between">
+          <div>
+            <span class="text-[11px] font-bold uppercase text-emerald-400 block">Massa de Gordura Estimada</span>
+            <div class="text-2xl font-black text-white mt-0.5">${fatKgCur !== null ? `${formatNum(fatKgCur, 2)} kg` : "--"}</div>
+            <span class="text-xs text-slate-400">Evolução de gordura: <strong class="${fatKgDelta !== null && fatKgDelta <= 0 ? "text-emerald-400" : "text-amber-300"}">${fatKgDelta !== null ? `${fatKgDelta > 0 ? "+" : ""}${formatNum(fatKgDelta, 2)} kg` : "Sem leitura"}</strong></span>
+          </div>
+          <div class="w-11 h-11 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-300 text-xl">
+            <i class="fa-solid fa-fire"></i>
+          </div>
+        </div>
+
+        <div class="bg-slate-900/85 border border-emerald-500/30 rounded-xl p-3.5 flex items-center justify-between">
+          <div>
+            <span class="text-[11px] font-bold uppercase text-emerald-400 block">Status da Balança</span>
+            <div class="text-sm sm:text-base font-extrabold text-white mt-1 flex flex-wrap items-center gap-2">
+              <span class="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs">2 objetivos atingidos (Músculo e Massa Óssea)</span>
+              <span class="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs">6 itens em acompanhamento</span>
+            </div>
+          </div>
+          <div class="w-11 h-11 rounded-xl bg-sky-500/20 border border-sky-500/40 flex items-center justify-center text-sky-300 text-xl">
+            <i class="fa-solid fa-person"></i>
+          </div>
+        </div>
+      `;
+
+      // Render 8 Bioimpedance Cards
+      grid.innerHTML = "";
+      BIO_KEYS.forEach((metric) => {
+        const curVal = curRec[metric.key];
+        const cmpVal = cmpRec ? cmpRec[metric.key] : null;
+        const goalVal = appState.goal[metric.key];
+        const status = getBioMetricStatus(metric.key, curVal);
+
+        const hasCur = curVal !== null && curVal !== undefined && curVal !== "";
+        const hasCmp = cmpVal !== null && cmpVal !== undefined && cmpVal !== "";
+        const diff = hasCur && hasCmp ? Number(curVal) - Number(cmpVal) : null;
+
+        let badgeClass = "bg-slate-800 text-slate-400 border-slate-700";
+        if (status.tone === "emerald") badgeClass = "bg-emerald-500/20 text-emerald-300 border-emerald-500/40";
+        else if (status.tone === "sky") badgeClass = "bg-sky-500/20 text-sky-300 border-sky-500/40";
+        else if (status.tone === "amber") badgeClass = "bg-amber-500/20 text-amber-300 border-amber-500/40";
+
+        let deltaHtml = `<span class="text-slate-500">Sem comparativo</span>`;
+        if (diff !== null) {
+          if (Math.abs(diff) < 0.001) {
+            deltaHtml = `<span class="text-slate-400 font-semibold">Estável (0)</span>`;
+          } else {
+            const isGood = metric.lowerIsBetter ? diff < 0 : diff > 0;
+            const color = isGood ? "text-emerald-400" : "text-amber-300";
+            const sign = diff > 0 ? "+" : "";
+            deltaHtml = `<span class="${color} font-bold">${sign}${formatNum(diff, metric.decimals)} ${metric.unit}</span>`;
+          }
+        }
+
+        const card = document.createElement("div");
+        card.className = "bg-slate-900/90 border border-slate-700/80 hover:border-emerald-500/50 rounded-xl p-4 flex flex-col justify-between transition";
+        card.innerHTML = `
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <div class="w-8 h-8 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-sm">
+                <i class="fa-solid ${metric.icon}"></i>
+              </div>
+              <span class="text-xs sm:text-sm font-bold text-slate-200">${metric.label}</span>
+            </div>
+            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${badgeClass}">
+              ${status.label}
+            </span>
+          </div>
+
+          <div class="my-3 flex items-baseline justify-between">
+            <div>
+              <span class="text-2xl sm:text-3xl font-black text-white">
+                ${hasCur ? formatNum(curVal, metric.decimals) : "--"}
+              </span>
+              <span class="text-xs font-bold text-slate-400 ml-0.5">${metric.unit}</span>
+            </div>
+            <div class="text-right">
+              <span class="text-[10px] uppercase text-slate-400 block">Evolução</span>
+              <div class="text-xs">${deltaHtml}</div>
+            </div>
+          </div>
+
+          <div class="pt-2 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-400">
+            <span>Em ${formatDateBR(cmpRec.data)}: <strong class="text-slate-300">${hasCmp ? `${formatNum(cmpVal, metric.decimals)} ${metric.unit}` : "--"}</strong></span>
+            <span class="text-emerald-400 font-semibold">Meta: ${formatNum(goalVal, metric.decimals)}${metric.unit ? ` ${metric.unit}` : ""}</span>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    };
+
+    window.editCurrentlySelectedBioRecord = function () {
+      const curId = document.getElementById("bioCurrentSelect")?.value;
+      if (curId) window.openRecordModal(curId);
+    };
+
+    // -----------------------------------------------------------------------
+    // 7. RENDER SPREADSHEET TABLE (WITH FILTERS & INLINE EDIT) & MOBILE CARDS
+    // -----------------------------------------------------------------------
+    window.setTableColumnFilter = function (filter) {
+      tableColumnFilter = filter;
+      const btnAll = document.getElementById("colFilterAll");
+      const btnMeasures = document.getElementById("colFilterMeasures");
+      const btnBio = document.getElementById("colFilterBio");
+
+      const activeClass = "px-2.5 py-1.5 rounded-lg font-bold bg-emerald-600 text-white transition";
+      const inactiveClass = "px-2.5 py-1.5 rounded-lg font-semibold text-slate-400 hover:text-white transition";
+
+      btnAll.className = filter === "all" ? activeClass : inactiveClass;
+      btnMeasures.className = filter === "measures" ? activeClass : inactiveClass;
+      btnBio.className = filter === "bio" ? activeClass : inactiveClass;
+
+      renderTableAndCards();
+    };
+
     function renderTableAndCards() {
       const records = appState.records;
       const goal = appState.goal;
       document.getElementById("recordsCountBadge").textContent = `${records.length} ${records.length === 1 ? "registro" : "registros"}`;
 
+      const showMeasures = tableColumnFilter === "all" || tableColumnFilter === "measures";
+      const showBio = tableColumnFilter === "all" || tableColumnFilter === "bio";
+
+      const thead = document.getElementById("recordsTableHead");
       const tbody = document.getElementById("recordsTableBody");
       const tfoot = document.getElementById("recordsTableFooter");
       const cardsContainer = document.getElementById("cardsViewContainer");
 
+      // 1. Render Table Header
+      thead.innerHTML = `
+        <tr class="bg-slate-800/95 text-slate-300 text-[11px] font-bold uppercase tracking-wider border-b border-slate-700">
+          <th class="py-3.5 px-3 sticky-col bg-slate-800">Dia</th>
+          <th class="py-3.5 px-2 text-center">Hora</th>
+          <th class="py-3.5 px-3 text-center bg-emerald-950/50 text-emerald-300 border-x border-slate-700/60">Peso Nu (kg)</th>
+          ${
+            showMeasures
+              ? MEASUREMENT_KEYS.map((m) => `<th class="py-3.5 px-2 text-center text-slate-200">${m.label}</th>`).join("")
+              : ""
+          }
+          ${
+            showBio
+              ? BIO_KEYS.map(
+                  (b) => `<th class="py-3.5 px-2 text-center bg-sky-950/30 text-sky-300 border-l border-slate-800">${b.shortLabel}${b.unit ? ` (${b.unit})` : ""}</th>`
+                ).join("")
+              : ""
+          }
+          <th class="py-3.5 px-3 text-center">Ações</th>
+        </tr>
+      `;
+
       tbody.innerHTML = "";
       cardsContainer.innerHTML = "";
 
+      // 2. Render Rows & Mobile Cards
       records.forEach((rec, idx) => {
         const prev = idx > 0 ? records[idx - 1] : null;
         const weightDiff = prev ? Number(rec.peso) - Number(prev.peso) : 0;
 
-        // Weight badge comparing with previous row
         let weightDeltaBadge = "";
         if (prev && Math.abs(weightDiff) >= 0.01) {
           const isLoss = weightDiff < 0;
@@ -1169,27 +1682,41 @@ function doPost(e) {
         }
 
         const tr = document.createElement("tr");
-        tr.className = "hover:bg-slate-800/60 transition group bg-slate-900/80";
+        tr.className = "hover:bg-slate-800/60 transition group bg-slate-900/85";
 
         if (inlineEditMode) {
-          // Direct inline editable cells (like Excel)
           tr.innerHTML = `
             <td class="py-2 px-2 sticky-col bg-slate-900">
               <input type="date" value="${rec.data}" onchange="updateRecordField('${rec.id}', 'data', this.value)" class="px-2 py-1 rounded bg-slate-950 border border-amber-500/40 text-white text-xs font-semibold w-32" />
             </td>
-            <td class="py-2 px-2 text-center">
-              <input type="time" value="${rec.hora}" onchange="updateRecordField('${rec.id}', 'hora', this.value)" class="px-2 py-1 rounded bg-slate-950 border border-amber-500/40 text-white text-xs font-semibold w-24 text-center" />
+            <td class="py-2 px-1.5 text-center">
+              <input type="time" value="${rec.hora}" onchange="updateRecordField('${rec.id}', 'hora', this.value)" class="px-1.5 py-1 rounded bg-slate-950 border border-amber-500/40 text-white text-xs font-semibold w-24 text-center" />
             </td>
             <td class="py-2 px-2 text-center bg-emerald-950/30 border-x border-slate-800">
-              <input type="number" step="0.01" value="${rec.peso}" onchange="updateRecordField('${rec.id}', 'peso', this.value)" class="px-2 py-1 rounded bg-slate-950 border border-emerald-500 text-emerald-300 text-xs font-extrabold w-24 text-center" />
+              <input type="number" step="0.01" value="${rec.peso}" onchange="updateRecordField('${rec.id}', 'peso', this.value)" class="px-1.5 py-1 rounded bg-slate-950 border border-emerald-500 text-emerald-300 text-xs font-extrabold w-20 text-center" />
             </td>
-            ${MEASUREMENT_KEYS.map(
-              (m) => `
-              <td class="py-2 px-1.5 text-center">
-                <input type="number" step="0.1" value="${rec[m.key]}" onchange="updateRecordField('${rec.id}', '${m.key}', this.value)" class="px-1.5 py-1 rounded bg-slate-950 border border-slate-700 focus:border-amber-400 text-white text-xs font-semibold w-16 text-center" />
-              </td>
-            `
-            ).join("")}
+            ${
+              showMeasures
+                ? MEASUREMENT_KEYS.map(
+                    (m) => `
+                  <td class="py-2 px-1 text-center">
+                    <input type="number" step="0.1" value="${rec[m.key] ?? ""}" onchange="updateRecordField('${rec.id}', '${m.key}', this.value)" class="px-1 py-1 rounded bg-slate-950 border border-slate-700 focus:border-amber-400 text-white text-xs font-semibold w-14 text-center" />
+                  </td>
+                `
+                  ).join("")
+                : ""
+            }
+            ${
+              showBio
+                ? BIO_KEYS.map(
+                    (b) => `
+                  <td class="py-2 px-1 text-center bg-sky-950/15 border-l border-slate-800/80">
+                    <input type="number" step="${b.decimals === 2 ? "0.01" : b.decimals === 1 ? "0.1" : "1"}" value="${rec[b.key] ?? ""}" placeholder="--" onchange="updateRecordField('${rec.id}', '${b.key}', this.value)" class="px-1 py-1 rounded bg-slate-950 border border-sky-500/40 focus:border-sky-400 text-sky-200 text-xs font-semibold w-16 text-center" />
+                  </td>
+                `
+                  ).join("")
+                : ""
+            }
             <td class="py-2 px-2 text-center">
               <button onclick="confirmDeleteRecord('${rec.id}')" class="p-1.5 rounded-lg bg-rose-500/15 hover:bg-rose-500/30 text-rose-400 transition" title="Excluir registro">
                 <i class="fa-solid fa-trash-can"></i>
@@ -1197,33 +1724,47 @@ function doPost(e) {
             </td>
           `;
         } else {
-          // Normal formatted spreadsheet row
           tr.innerHTML = `
             <td class="py-3 px-3 font-bold text-white whitespace-nowrap sticky-col bg-slate-900 group-hover:bg-slate-800">
               ${formatDateBR(rec.data)}
             </td>
-            <td class="py-3 px-2.5 text-center text-slate-300 whitespace-nowrap">${rec.hora}</td>
+            <td class="py-3 px-2 text-center text-slate-300 whitespace-nowrap">${rec.hora}</td>
             <td class="py-3 px-3 text-center font-extrabold text-white bg-emerald-950/25 border-x border-slate-800 whitespace-nowrap">
               <span>${formatWeight(rec.peso)}</span>
               ${weightDeltaBadge}
             </td>
-            ${MEASUREMENT_KEYS.map((m) => {
-              const currVal = Number(rec[m.key]);
-              const prevVal = prev ? Number(prev[m.key]) : currVal;
-              const diffM = currVal - prevVal;
-              let deltaDot = "";
-              if (prev && diffM !== 0) {
-                deltaDot = `<sup class="ml-0.5 text-[10px] font-bold ${diffM < 0 ? "text-emerald-400" : "text-amber-400"}">${diffM > 0 ? "+" : ""}${formatMeasure(diffM)}</sup>`;
-              }
-              return `<td class="py-3 px-2.5 text-center text-slate-200 font-medium whitespace-nowrap">${formatMeasure(currVal)}${deltaDot}</td>`;
-            }).join("")}
+            ${
+              showMeasures
+                ? MEASUREMENT_KEYS.map((m) => {
+                    const currVal = Number(rec[m.key]);
+                    const prevVal = prev ? Number(prev[m.key]) : currVal;
+                    const diffM = currVal - prevVal;
+                    let deltaDot = "";
+                    if (prev && !isNaN(diffM) && diffM !== 0) {
+                      deltaDot = `<sup class="ml-0.5 text-[10px] font-bold ${diffM < 0 ? "text-emerald-400" : "text-amber-400"}">${diffM > 0 ? "+" : ""}${formatMeasure(diffM)}</sup>`;
+                    }
+                    return `<td class="py-3 px-2 text-center text-slate-200 font-medium whitespace-nowrap">${formatMeasure(rec[m.key])}${deltaDot}</td>`;
+                  }).join("")
+                : ""
+            }
+            ${
+              showBio
+                ? BIO_KEYS.map((b) => {
+                    const val = rec[b.key];
+                    const hasVal = val !== null && val !== undefined && val !== "";
+                    return `<td class="py-3 px-2 text-center whitespace-nowrap bg-sky-950/10 border-l border-slate-800/70 ${hasVal ? "text-sky-200 font-semibold" : "text-slate-600"}">
+                      ${hasVal ? formatNum(val, b.decimals) : '<button onclick="openRecordModal(\'' + rec.id + '\')" class="text-[10px] text-slate-500 hover:text-sky-400 underline">+ inserir</button>'}
+                    </td>`;
+                  }).join("")
+                : ""
+            }
             <td class="py-3 px-3 text-center whitespace-nowrap">
               <div class="inline-flex items-center gap-1.5">
-                <button onclick="openRecordModal('${rec.id}')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-emerald-600 text-slate-200 hover:text-white text-xs font-semibold transition flex items-center gap-1" title="Editar este registro">
+                <button onclick="openRecordModal('${rec.id}')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-emerald-600 text-slate-200 hover:text-white text-xs font-semibold transition flex items-center gap-1">
                   <i class="fa-solid fa-pen"></i>
                   <span>Editar</span>
                 </button>
-                <button onclick="confirmDeleteRecord('${rec.id}')" class="p-1.5 rounded-lg bg-slate-800 hover:bg-rose-600 text-slate-400 hover:text-white text-xs transition" title="Excluir este registro">
+                <button onclick="confirmDeleteRecord('${rec.id}')" class="p-1.5 rounded-lg bg-slate-800 hover:bg-rose-600 text-slate-400 hover:text-white text-xs transition" title="Excluir">
                   <i class="fa-solid fa-trash"></i>
                 </button>
               </div>
@@ -1232,17 +1773,16 @@ function doPost(e) {
         }
         tbody.appendChild(tr);
 
-        // Mobile Card Item
+        // Mobile Card Item (Shows both Measurements and Bioimpedance)
+        const hasBio = rec.imc !== null && rec.imc !== undefined && rec.imc !== "";
         const card = document.createElement("div");
         card.className = "rounded-xl bg-slate-900/90 border border-slate-700/80 p-4 space-y-3";
         card.innerHTML = `
           <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
-            <div>
-              <div class="text-sm font-extrabold text-white flex items-center gap-2">
-                <i class="fa-regular fa-calendar text-emerald-400"></i>
-                <span>${formatDateBR(rec.data)}</span>
-                <span class="text-xs font-medium text-slate-400">às ${rec.hora}</span>
-              </div>
+            <div class="text-sm font-extrabold text-white flex items-center gap-2">
+              <i class="fa-regular fa-calendar text-emerald-400"></i>
+              <span>${formatDateBR(rec.data)}</span>
+              <span class="text-xs font-medium text-slate-400">às ${rec.hora}</span>
             </div>
             <div class="flex items-center gap-2">
               <button onclick="openRecordModal('${rec.id}')" class="px-3 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold flex items-center gap-1">
@@ -1262,41 +1802,73 @@ function doPost(e) {
             </div>
           </div>
 
-          <div class="grid grid-cols-4 gap-2 text-center">
-            ${MEASUREMENT_KEYS.map(
-              (m) => `
-              <div class="bg-slate-800/70 rounded-lg p-1.5 border border-slate-700/60">
-                <div class="text-[10px] text-slate-400 font-semibold truncate">${m.label}</div>
-                <div class="text-xs font-bold text-white">${formatMeasure(rec[m.key])} <span class="text-[9px] text-slate-400">cm</span></div>
-              </div>
-            `
-            ).join("")}
+          <div>
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1.5">Medidas Corporais (cm)</span>
+            <div class="grid grid-cols-4 gap-1.5 text-center">
+              ${MEASUREMENT_KEYS.map(
+                (m) => `
+                <div class="bg-slate-800/70 rounded-lg p-1.5 border border-slate-700/60">
+                  <div class="text-[10px] text-slate-400 font-semibold truncate">${m.label}</div>
+                  <div class="text-xs font-bold text-white">${formatMeasure(rec[m.key])} <span class="text-[9px] text-slate-400">cm</span></div>
+                </div>
+              `
+              ).join("")}
+            </div>
+          </div>
+
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-sky-400">Bioimpedância (Balança)</span>
+              ${
+                hasBio
+                  ? `<span class="text-[10px] text-emerald-300 font-semibold">${rec.tipoCorpo || "Grosso-conjunto"}</span>`
+                  : `<button onclick="openRecordModal('${rec.id}')" class="text-[10px] text-sky-400 underline font-semibold">+ Preencher Bioimpedância</button>`
+              }
+            </div>
+            <div class="grid grid-cols-4 gap-1.5 text-center">
+              ${BIO_KEYS.map(
+                (b) => `
+                <div class="bg-sky-950/20 rounded-lg p-1.5 border border-sky-500/20">
+                  <div class="text-[9px] text-slate-400 font-semibold truncate">${b.shortLabel}</div>
+                  <div class="text-xs font-bold text-sky-200">${rec[b.key] !== null && rec[b.key] !== undefined ? `${formatNum(rec[b.key], b.decimals)}${b.unit}` : "--"}</div>
+                </div>
+              `
+              ).join("")}
+            </div>
           </div>
         `;
         cardsContainer.appendChild(card);
       });
 
-      // Footer Rows: META 31/12/2026 & DIFERENÇA ATUAL
+      // 3. Footer Rows: META 31/12/2026 & FALTA PARA A META
       const lastRec = records.length > 0 ? records[records.length - 1] : null;
       const diffPeso = lastRec ? Number(lastRec.peso) - Number(goal.peso) : 0;
 
       tfoot.innerHTML = `
-        <!-- Goal Row matching the spreadsheet -->
         <tr class="bg-emerald-950/40 text-emerald-300 font-extrabold">
-          <td class="py-3.5 px-3 sticky-col bg-slate-900 border-t border-emerald-500/40">
+          <td class="py-3.5 px-3 sticky-col bg-slate-900 border-t border-emerald-500/40 whitespace-nowrap">
             <div class="flex items-center gap-1.5">
               <i class="fa-solid fa-bullseye text-amber-400"></i>
               <span>META ${formatDateBR(goal.dataMeta)}</span>
             </div>
           </td>
-          <td class="py-3.5 px-2.5 text-center text-slate-400">--:--</td>
-          <td class="py-3.5 px-3 text-center text-base text-emerald-300 bg-emerald-900/40 border-x border-emerald-500/30">
+          <td class="py-3.5 px-2 text-center text-slate-400">--:--</td>
+          <td class="py-3.5 px-3 text-center text-base text-emerald-300 bg-emerald-900/40 border-x border-emerald-500/30 whitespace-nowrap">
             ${formatWeight(goal.peso)}
           </td>
-          ${MEASUREMENT_KEYS.map(
-            (m) => `<td class="py-3.5 px-2.5 text-center text-emerald-300">${formatMeasure(goal[m.key])}</td>`
-          ).join("")}
-          <td class="py-3.5 px-3 text-center">
+          ${
+            showMeasures
+              ? MEASUREMENT_KEYS.map((m) => `<td class="py-3.5 px-2 text-center text-emerald-300">${formatMeasure(goal[m.key])}</td>`).join("")
+              : ""
+          }
+          ${
+            showBio
+              ? BIO_KEYS.map(
+                  (b) => `<td class="py-3.5 px-2 text-center text-sky-300 bg-sky-950/20 border-l border-slate-800">${formatNum(goal[b.key], b.decimals)}</td>`
+                ).join("")
+              : ""
+          }
+          <td class="py-3.5 px-3 text-center whitespace-nowrap">
             <button onclick="openGoalModal()" class="px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-bold transition">
               <i class="fa-solid fa-pen mr-1"></i> Editar Meta
             </button>
@@ -1306,17 +1878,34 @@ function doPost(e) {
           lastRec
             ? `
         <tr class="bg-slate-950/90 text-slate-300 font-semibold text-xs border-t border-slate-800">
-          <td class="py-2.5 px-3 sticky-col bg-slate-950 text-slate-400">FALTA P/ META</td>
-          <td class="py-2.5 px-2.5 text-center">--</td>
-          <td class="py-2.5 px-3 text-center font-bold ${diffPeso > 0 ? "text-amber-300" : "text-emerald-400"} border-x border-slate-800">
-            ${diffPeso > 0 ? `-${formatWeight(diffPeso)} kg` : "Atingida!"}
+          <td class="py-2.5 px-3 sticky-col bg-slate-950 text-slate-400 whitespace-nowrap">DIFERENÇA P/ META</td>
+          <td class="py-2.5 px-2 text-center">--</td>
+          <td class="py-2.5 px-3 text-center font-bold ${diffPeso > 0 ? "text-amber-300" : "text-emerald-400"} border-x border-slate-800 whitespace-nowrap">
+            ${diffPeso > 0 ? `-${formatWeight(diffPeso)} kg` : "Meta OK!"}
           </td>
-          ${MEASUREMENT_KEYS.map((m) => {
-            const d = Number(lastRec[m.key]) - Number(goal[m.key]);
-            return `<td class="py-2.5 px-2.5 text-center ${d > 0 ? "text-amber-300" : "text-emerald-400"}">
-              ${d > 0 ? `-${formatMeasure(d)}` : "OK"}
-            </td>`;
-          }).join("")}
+          ${
+            showMeasures
+              ? MEASUREMENT_KEYS.map((m) => {
+                  const d = Number(lastRec[m.key]) - Number(goal[m.key]);
+                  return `<td class="py-2.5 px-2 text-center ${d > 0 ? "text-amber-300" : "text-emerald-400"}">
+                    ${d > 0 ? `-${formatMeasure(d)}` : "OK"}
+                  </td>`;
+                }).join("")
+              : ""
+          }
+          ${
+            showBio
+              ? BIO_KEYS.map((b) => {
+                  const curVal = lastRec[b.key];
+                  if (curVal === null || curVal === undefined) return `<td class="py-2.5 px-2 text-center text-slate-600">--</td>`;
+                  const d = Number(curVal) - Number(goal[b.key]);
+                  const ok = b.lowerIsBetter ? d <= 0 : d >= 0;
+                  return `<td class="py-2.5 px-2 text-center border-l border-slate-800 ${ok ? "text-emerald-400" : "text-amber-300"}">
+                    ${ok ? "OK" : `${d > 0 ? "+" : ""}${formatNum(d, b.decimals)}`}
+                  </td>`;
+                }).join("")
+              : ""
+          }
           <td class="py-2.5 px-3 text-center text-[11px] text-slate-500">Atual vs Meta</td>
         </tr>
         `
@@ -1326,187 +1915,144 @@ function doPost(e) {
     }
 
     // -----------------------------------------------------------------------
-    // 7. CUSTOM INTERACTIVE CANVAS CHARTS (WEIGHT & BODY MEASUREMENTS)
+    // 8. INTERACTIVE CHARTS WITH CHART.JS
     // -----------------------------------------------------------------------
-    function renderCharts() {
-      drawLineChart({
-        canvasId: "weightChartCanvas",
-        records: appState.records,
-        fieldKey: "peso",
-        goalValue: Number(appState.goal.peso),
-        unit: "kg",
-        lineColor: "#10b981",
-        goalColor: "#f59e0b",
-        isWeight: true
-      });
+    window.renderCharts = function () {
+      const records = appState.records;
+      const goal = appState.goal;
 
-      const selectEl = document.getElementById("selectedMeasurementChart");
-      const measureKey = selectEl ? selectEl.value : "barriga";
-      drawLineChart({
-        canvasId: "measureChartCanvas",
-        records: appState.records,
-        fieldKey: measureKey,
-        goalValue: Number(appState.goal[measureKey]),
-        unit: "cm",
-        lineColor: "#38bdf8",
-        goalColor: "#10b981",
-        isWeight: false
-      });
-    }
+      // 1. Weight Chart
+      const weightCanvas = document.getElementById("weightChartCanvas");
+      if (weightCanvas && typeof Chart !== "undefined") {
+        if (weightChartInstance) weightChartInstance.destroy();
 
-    function drawLineChart({ canvasId, records, fieldKey, goalValue, unit, lineColor, goalColor, isWeight }) {
-      const canvas = document.getElementById(canvasId);
-      if (!canvas) return;
-      const ctx = canvas.getContext("2d");
+        const labels = records.map((r) => formatDateBR(r.data).slice(0, 5));
+        const weights = records.map((r) => Number(r.peso));
+        const goalLine = records.map(() => Number(goal.peso));
 
-      const rect = canvas.parentElement.getBoundingClientRect();
-      const dpr = window.devicePixelRatio || 1;
-      const width = Math.max(280, rect.width - 24);
-      const height = Math.max(200, rect.height - 24);
-
-      canvas.width = width * dpr;
-      canvas.height = height * dpr;
-      canvas.style.width = `${width}px`;
-      canvas.style.height = `${height}px`;
-      ctx.scale(dpr, dpr);
-
-      ctx.clearRect(0, 0, width, height);
-
-      if (!records || records.length === 0) {
-        ctx.fillStyle = "#94a3b8";
-        ctx.font = "13px Inter, sans-serif";
-        ctx.textAlign = "center";
-        ctx.fillText("Nenhum registro para exibir no gráfico.", width / 2, height / 2);
-        return;
+        weightChartInstance = new Chart(weightCanvas, {
+          type: "line",
+          data: {
+            labels,
+            datasets: [
+              {
+                label: "Peso Nu (kg)",
+                data: weights,
+                borderColor: "#10b981",
+                backgroundColor: "rgba(16, 185, 129, 0.2)",
+                borderWidth: 3,
+                pointBackgroundColor: "#0f172a",
+                pointBorderColor: "#10b981",
+                pointBorderWidth: 2.5,
+                pointRadius: 5,
+                fill: true,
+                tension: 0.25
+              },
+              {
+                label: `Meta (${formatWeight(goal.peso)} kg)`,
+                data: goalLine,
+                borderColor: "#f59e0b",
+                borderWidth: 2,
+                borderDash: [6, 4],
+                pointRadius: 0,
+                fill: false
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                labels: { color: "#cbd5e1", font: { family: "Inter", size: 11, weight: "bold" } }
+              }
+            },
+            scales: {
+              x: {
+                ticks: { color: "#94a3b8", font: { family: "Inter", size: 11 } },
+                grid: { color: "rgba(148, 163, 184, 0.08)" }
+              },
+              y: {
+                ticks: { color: "#94a3b8", font: { family: "Inter", size: 11 } },
+                grid: { color: "rgba(148, 163, 184, 0.12)" }
+              }
+            }
+          }
+        });
       }
 
-      const values = records.map((r) => Number(r[fieldKey]));
-      const allVals = [...values, goalValue];
-      const minVal = Math.min(...allVals);
-      const maxVal = Math.max(...allVals);
-      const paddingVal = Math.max(1.5, (maxVal - minVal) * 0.2);
-      const yMin = minVal - paddingVal;
-      const yMax = maxVal + paddingVal;
+      // 2. Selected Measurement or Bioimpedance Metric Chart
+      const metricCanvas = document.getElementById("metricChartCanvas");
+      const selectEl = document.getElementById("selectedMetricChart");
+      const selectedKey = selectEl ? selectEl.value : "gorduraCorporal";
 
-      const padLeft = 48;
-      const padRight = 22;
-      const padTop = 24;
-      const padBottom = 34;
-      const plotW = width - padLeft - padRight;
-      const plotH = height - padTop - padBottom;
+      if (metricCanvas && typeof Chart !== "undefined") {
+        if (metricChartInstance) metricChartInstance.destroy();
 
-      const getX = (index) => {
-        if (records.length === 1) return padLeft + plotW / 2;
-        return padLeft + (index / (records.length - 1)) * plotW;
-      };
-      const getY = (val) => {
-        return padTop + plotH - ((val - yMin) / (yMax - yMin)) * plotH;
-      };
+        const filteredRecords = records.filter((r) => r[selectedKey] !== null && r[selectedKey] !== undefined && r[selectedKey] !== "");
+        const labels = filteredRecords.map((r) => formatDateBR(r.data).slice(0, 5));
+        const values = filteredRecords.map((r) => Number(r[selectedKey]));
+        const goalVal = goal[selectedKey] !== undefined ? Number(goal[selectedKey]) : null;
+        const goalLine = goalVal !== null ? filteredRecords.map(() => goalVal) : [];
 
-      // Horizontal Grid Lines
-      ctx.strokeStyle = "rgba(148, 163, 184, 0.12)";
-      ctx.lineWidth = 1;
-      const steps = 4;
-      for (let i = 0; i <= steps; i++) {
-        const y = padTop + (i / steps) * plotH;
-        const val = yMax - (i / steps) * (yMax - yMin);
-        ctx.beginPath();
-        ctx.moveTo(padLeft, y);
-        ctx.lineTo(width - padRight, y);
-        ctx.stroke();
+        const selectedOptionText = selectEl.options[selectEl.selectedIndex]?.text || selectedKey;
 
-        ctx.fillStyle = "#64748b";
-        ctx.font = "10px Inter, sans-serif";
-        ctx.textAlign = "right";
-        ctx.fillText(isWeight ? val.toFixed(1).replace(".", ",") : Math.round(val).toString(), padLeft - 8, y + 3);
+        const datasets = [
+          {
+            label: selectedOptionText,
+            data: values,
+            borderColor: "#38bdf8",
+            backgroundColor: "rgba(56, 189, 248, 0.2)",
+            borderWidth: 3,
+            pointBackgroundColor: "#0f172a",
+            pointBorderColor: "#38bdf8",
+            pointBorderWidth: 2.5,
+            pointRadius: 5,
+            fill: true,
+            tension: 0.25
+          }
+        ];
+
+        if (goalVal !== null) {
+          datasets.push({
+            label: `Meta (${goalVal})`,
+            data: goalLine,
+            borderColor: "#10b981",
+            borderWidth: 2,
+            borderDash: [6, 4],
+            pointRadius: 0,
+            fill: false
+          });
+        }
+
+        metricChartInstance = new Chart(metricCanvas, {
+          type: "line",
+          data: { labels, datasets },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                labels: { color: "#cbd5e1", font: { family: "Inter", size: 11, weight: "bold" } }
+              }
+            },
+            scales: {
+              x: {
+                ticks: { color: "#94a3b8", font: { family: "Inter", size: 11 } },
+                grid: { color: "rgba(148, 163, 184, 0.08)" }
+              },
+              y: {
+                ticks: { color: "#94a3b8", font: { family: "Inter", size: 11 } },
+                grid: { color: "rgba(148, 163, 184, 0.12)" }
+              }
+            }
+          }
+        });
       }
-
-      // Goal Dashed Line (Meta 31/12/2026)
-      const goalY = getY(goalValue);
-      ctx.save();
-      ctx.strokeStyle = goalColor;
-      ctx.lineWidth = 1.8;
-      ctx.setLineDash([6, 4]);
-      ctx.beginPath();
-      ctx.moveTo(padLeft, goalY);
-      ctx.lineTo(width - padRight, goalY);
-      ctx.stroke();
-
-      ctx.fillStyle = goalColor;
-      ctx.font = "bold 10px Inter, sans-serif";
-      ctx.textAlign = "right";
-      const formattedGoal = isWeight ? formatWeight(goalValue) : formatMeasure(goalValue);
-      ctx.fillText(`META: ${formattedGoal} ${unit}`, width - padRight - 4, goalY - 6);
-      ctx.restore();
-
-      // Area Gradient under data line
-      const grad = ctx.createLinearGradient(0, padTop, 0, padTop + plotH);
-      grad.addColorStop(0, isWeight ? "rgba(16, 185, 129, 0.30)" : "rgba(56, 189, 248, 0.30)");
-      grad.addColorStop(1, "rgba(15, 23, 42, 0.0)");
-
-      ctx.beginPath();
-      records.forEach((r, idx) => {
-        const x = getX(idx);
-        const y = getY(Number(r[fieldKey]));
-        if (idx === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
-      });
-      ctx.lineTo(getX(records.length - 1), padTop + plotH);
-      ctx.lineTo(getX(0), padTop + plotH);
-      ctx.closePath();
-      ctx.fillStyle = grad;
-      ctx.fill();
-
-      // Main Evolution Line
-      ctx.strokeStyle = lineColor;
-      ctx.lineWidth = 2.8;
-      ctx.beginPath();
-      records.forEach((r, idx) => {
-        const x = getX(idx);
-        const y = getY(Number(r[fieldKey]));
-        if (idx === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
-      });
-      ctx.stroke();
-
-      // Data Points & Value Labels
-      records.forEach((r, idx) => {
-        const val = Number(r[fieldKey]);
-        const x = getX(idx);
-        const y = getY(val);
-
-        // Circle
-        ctx.fillStyle = "#0f172a";
-        ctx.strokeStyle = lineColor;
-        ctx.lineWidth = 2.5;
-        ctx.beginPath();
-        ctx.arc(x, y, 4.5, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-
-        // Value label above point
-        ctx.fillStyle = "#f8fafc";
-        ctx.font = "bold 10px Inter, sans-serif";
-        ctx.textAlign = "center";
-        const valStr = isWeight ? formatWeight(val) : formatMeasure(val);
-        ctx.fillText(valStr, x, y - 9);
-
-        // Date label on X-axis (DD/MM)
-        const parts = (r.data || "").split("-");
-        const shortDate = parts.length === 3 ? `${parts[2]}/${parts[1]}` : r.data;
-        ctx.fillStyle = "#94a3b8";
-        ctx.font = "10px Inter, sans-serif";
-        ctx.fillText(shortDate, x, height - 10);
-      });
-    }
-
-    // Redraw charts on window resize
-    window.addEventListener("resize", () => {
-      renderCharts();
-    });
+    };
 
     // -----------------------------------------------------------------------
-    // 8. CRUD HANDLERS & WINDOW FUNCTIONS
+    // 9. CRUD HANDLERS & FORM HELPERS
     // -----------------------------------------------------------------------
     window.setViewMode = function (mode) {
       currentViewMode = mode;
@@ -1518,13 +2064,13 @@ function doPost(e) {
       if (mode === "cards") {
         tableContainer.classList.add("hidden");
         cardsContainer.classList.remove("hidden");
-        btnCards.className = "px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 bg-emerald-600 text-white transition";
-        btnTable.className = "px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 text-slate-400 hover:text-white transition";
+        btnCards.className = "px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 bg-sky-600 text-white transition";
+        btnTable.className = "px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 text-slate-400 hover:text-white transition";
       } else {
         cardsContainer.classList.add("hidden");
         tableContainer.classList.remove("hidden");
-        btnTable.className = "px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 bg-emerald-600 text-white transition";
-        btnCards.className = "px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 text-slate-400 hover:text-white transition";
+        btnTable.className = "px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 bg-sky-600 text-white transition";
+        btnCards.className = "px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 text-slate-400 hover:text-white transition";
       }
     };
 
@@ -1536,11 +2082,11 @@ function doPost(e) {
 
       if (inlineEditMode) {
         window.setViewMode("table");
-        btnText.textContent = "Edição Direta na Tabela: ON";
+        btnText.textContent = "Edição Direta: ON";
         btn.className = "px-3 py-2 rounded-xl bg-amber-500 text-slate-950 font-bold text-xs flex items-center gap-2 transition";
         banner.classList.remove("hidden");
       } else {
-        btnText.textContent = "Edição Direta na Tabela: OFF";
+        btnText.textContent = "Edição Direta: OFF";
         btn.className = "px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold flex items-center gap-2 transition";
         banner.classList.add("hidden");
       }
@@ -1551,16 +2097,45 @@ function doPost(e) {
       const rec = appState.records.find((r) => r.id === recordId);
       if (!rec) return;
 
-      if (field === "data" || field === "hora") {
+      if (field === "data" || field === "hora" || field === "tipoCorpo") {
         rec[field] = rawValue;
       } else {
-        const parsed = parseFloat(String(rawValue).replace(",", "."));
-        if (!isNaN(parsed)) {
-          rec[field] = parsed;
+        if (rawValue === "" || rawValue === null) {
+          rec[field] = null;
+        } else {
+          const parsed = parseFloat(String(rawValue).replace(",", "."));
+          if (!isNaN(parsed)) rec[field] = parsed;
         }
       }
-      await persistStateToCloud(true);
+      await persistState(true);
     };
+
+    window.autoCalcImcIfNeeded = function () {
+      const pesoVal = parseFloat(document.getElementById("recPeso").value);
+      const imcInput = document.getElementById("recImc");
+      if (!isNaN(pesoVal) && pesoVal > 30 && (!imcInput.value || imcInput.dataset.autoCalculated === "true")) {
+        const bmi = pesoVal / (ALAN_HEIGHT_M * ALAN_HEIGHT_M);
+        imcInput.value = bmi.toFixed(1);
+        imcInput.dataset.autoCalculated = "true";
+      }
+    };
+
+    window.calcImcButton = function () {
+      const pesoVal = parseFloat(document.getElementById("recPeso").value);
+      if (isNaN(pesoVal) || pesoVal <= 0) {
+        showToast("Digite o Peso Nu (kg) primeiro para calcular o IMC.", "warning");
+        return;
+      }
+      const bmi = pesoVal / (ALAN_HEIGHT_M * ALAN_HEIGHT_M);
+      document.getElementById("recImc").value = bmi.toFixed(1);
+      showToast(`IMC calculado: ${bmi.toFixed(1)} (altura 1,72m)`);
+    };
+
+    function parseOptionalNum(val) {
+      if (val === "" || val === null || val === undefined) return null;
+      const n = parseFloat(String(val).replace(",", "."));
+      return isNaN(n) ? null : n;
+    }
 
     window.openRecordModal = function (recordId = null) {
       const modal = document.getElementById("recordModal");
@@ -1573,7 +2148,7 @@ function doPost(e) {
         const rec = appState.records.find((r) => r.id === recordId);
         if (!rec) return;
         title.textContent = `Editar Registro (${formatDateBR(rec.data)})`;
-        subtitle.textContent = "Altere qualquer informação deste registro abaixo";
+        subtitle.textContent = "Edite qualquer medida em cm ou indicador da balança de bioimpedância";
         submitText.textContent = "Salvar Alterações";
         helper.classList.add("hidden");
 
@@ -1581,17 +2156,28 @@ function doPost(e) {
         document.getElementById("recData").value = rec.data;
         document.getElementById("recHora").value = rec.hora;
         document.getElementById("recPeso").value = rec.peso;
-        document.getElementById("recBraco").value = rec.braco;
-        document.getElementById("recAntebraco").value = rec.antebraco;
-        document.getElementById("recCoxa").value = rec.coxa;
-        document.getElementById("recPanturrilha").value = rec.panturrilha;
-        document.getElementById("recQuadril").value = rec.quadril;
-        document.getElementById("recBarriga").value = rec.barriga;
-        document.getElementById("recAbdomen").value = rec.abdomen;
-        document.getElementById("recPeitoral").value = rec.peitoral;
+        document.getElementById("recBraco").value = rec.braco ?? "";
+        document.getElementById("recAntebraco").value = rec.antebraco ?? "";
+        document.getElementById("recCoxa").value = rec.coxa ?? "";
+        document.getElementById("recPanturrilha").value = rec.panturrilha ?? "";
+        document.getElementById("recQuadril").value = rec.quadril ?? "";
+        document.getElementById("recBarriga").value = rec.barriga ?? "";
+        document.getElementById("recAbdomen").value = rec.abdomen ?? "";
+        document.getElementById("recPeitoral").value = rec.peitoral ?? "";
+
+        // Bioimpedance fields
+        document.getElementById("recImc").value = rec.imc ?? "";
+        document.getElementById("recGorduraCorporal").value = rec.gorduraCorporal ?? "";
+        document.getElementById("recAgua").value = rec.agua ?? "";
+        document.getElementById("recProteina").value = rec.proteina ?? "";
+        document.getElementById("recMetabolismoBasal").value = rec.metabolismoBasal ?? "";
+        document.getElementById("recGorduraVisceral").value = rec.gorduraVisceral ?? "";
+        document.getElementById("recMusculo").value = rec.musculo ?? "";
+        document.getElementById("recMassaOssea").value = rec.massaOssea ?? "";
+        document.getElementById("recTipoCorpo").value = rec.tipoCorpo || "Grosso-conjunto";
       } else {
-        title.textContent = "Novo Registro de Peso e Medidas";
-        subtitle.textContent = "Adicione uma nova medição à sua planilha";
+        title.textContent = "Novo Registro (Peso, Medidas e Bioimpedância)";
+        subtitle.textContent = "Adicione uma nova medição completa ao sistema";
         submitText.textContent = "Inserir Registro";
         helper.classList.remove("hidden");
 
@@ -1602,26 +2188,23 @@ function doPost(e) {
         const hh = String(now.getHours()).padStart(2, "0");
         const min = String(now.getMinutes()).padStart(2, "0");
 
+        document.getElementById("recordForm").reset();
         document.getElementById("recordIdInput").value = "";
         document.getElementById("recData").value = `${yyyy}-${mm}-${dd}`;
         document.getElementById("recHora").value = `${hh}:${min}`;
+        document.getElementById("recTipoCorpo").value = "Grosso-conjunto";
 
-        // Pre-fill measurements with the latest record to make mobile entry super fast
         const lastRec = appState.records.length > 0 ? appState.records[appState.records.length - 1] : null;
         if (lastRec) {
           document.getElementById("recPeso").value = lastRec.peso;
-          document.getElementById("recBraco").value = lastRec.braco;
-          document.getElementById("recAntebraco").value = lastRec.antebraco;
-          document.getElementById("recCoxa").value = lastRec.coxa;
-          document.getElementById("recPanturrilha").value = lastRec.panturrilha;
-          document.getElementById("recQuadril").value = lastRec.quadril;
-          document.getElementById("recBarriga").value = lastRec.barriga;
-          document.getElementById("recAbdomen").value = lastRec.abdomen;
-          document.getElementById("recPeitoral").value = lastRec.peitoral;
-        } else {
-          document.getElementById("recordForm").reset();
-          document.getElementById("recData").value = `${yyyy}-${mm}-${dd}`;
-          document.getElementById("recHora").value = `${hh}:${min}`;
+          document.getElementById("recBraco").value = lastRec.braco ?? "";
+          document.getElementById("recAntebraco").value = lastRec.antebraco ?? "";
+          document.getElementById("recCoxa").value = lastRec.coxa ?? "";
+          document.getElementById("recPanturrilha").value = lastRec.panturrilha ?? "";
+          document.getElementById("recQuadril").value = lastRec.quadril ?? "";
+          document.getElementById("recBarriga").value = lastRec.barriga ?? "";
+          document.getElementById("recAbdomen").value = lastRec.abdomen ?? "";
+          document.getElementById("recPeitoral").value = lastRec.peitoral ?? "";
         }
       }
 
@@ -1636,15 +2219,28 @@ function doPost(e) {
       if (appState.records.length === 0) return;
       const last = appState.records[appState.records.length - 1];
       document.getElementById("recPeso").value = last.peso;
-      document.getElementById("recBraco").value = last.braco;
-      document.getElementById("recAntebraco").value = last.antebraco;
-      document.getElementById("recCoxa").value = last.coxa;
-      document.getElementById("recPanturrilha").value = last.panturrilha;
-      document.getElementById("recQuadril").value = last.quadril;
-      document.getElementById("recBarriga").value = last.barriga;
-      document.getElementById("recAbdomen").value = last.abdomen;
-      document.getElementById("recPeitoral").value = last.peitoral;
-      showToast("Últimas medidas carregadas no formulário!");
+      document.getElementById("recBraco").value = last.braco ?? "";
+      document.getElementById("recAntebraco").value = last.antebraco ?? "";
+      document.getElementById("recCoxa").value = last.coxa ?? "";
+      document.getElementById("recPanturrilha").value = last.panturrilha ?? "";
+      document.getElementById("recQuadril").value = last.quadril ?? "";
+      document.getElementById("recBarriga").value = last.barriga ?? "";
+      document.getElementById("recAbdomen").value = last.abdomen ?? "";
+      document.getElementById("recPeitoral").value = last.peitoral ?? "";
+
+      const lastBio = [...appState.records].reverse().find((r) => r.imc !== null && r.imc !== undefined);
+      if (lastBio) {
+        document.getElementById("recImc").value = lastBio.imc ?? "";
+        document.getElementById("recGorduraCorporal").value = lastBio.gorduraCorporal ?? "";
+        document.getElementById("recAgua").value = lastBio.agua ?? "";
+        document.getElementById("recProteina").value = lastBio.proteina ?? "";
+        document.getElementById("recMetabolismoBasal").value = lastBio.metabolismoBasal ?? "";
+        document.getElementById("recGorduraVisceral").value = lastBio.gorduraVisceral ?? "";
+        document.getElementById("recMusculo").value = lastBio.musculo ?? "";
+        document.getElementById("recMassaOssea").value = lastBio.massaOssea ?? "";
+        document.getElementById("recTipoCorpo").value = lastBio.tipoCorpo || "Grosso-conjunto";
+      }
+      showToast("Últimas medidas e bioimpedância carregadas!");
     };
 
     window.saveRecordForm = async function (event) {
@@ -1655,27 +2251,35 @@ function doPost(e) {
         data: document.getElementById("recData").value,
         hora: document.getElementById("recHora").value,
         peso: parseFloat(document.getElementById("recPeso").value),
-        braco: parseFloat(document.getElementById("recBraco").value),
-        antebraco: parseFloat(document.getElementById("recAntebraco").value),
-        coxa: parseFloat(document.getElementById("recCoxa").value),
-        panturrilha: parseFloat(document.getElementById("recPanturrilha").value),
-        quadril: parseFloat(document.getElementById("recQuadril").value),
-        barriga: parseFloat(document.getElementById("recBarriga").value),
-        abdomen: parseFloat(document.getElementById("recAbdomen").value),
-        peitoral: parseFloat(document.getElementById("recPeitoral").value)
+        braco: parseOptionalNum(document.getElementById("recBraco").value) ?? 0,
+        antebraco: parseOptionalNum(document.getElementById("recAntebraco").value) ?? 0,
+        coxa: parseOptionalNum(document.getElementById("recCoxa").value) ?? 0,
+        panturrilha: parseOptionalNum(document.getElementById("recPanturrilha").value) ?? 0,
+        quadril: parseOptionalNum(document.getElementById("recQuadril").value) ?? 0,
+        barriga: parseOptionalNum(document.getElementById("recBarriga").value) ?? 0,
+        abdomen: parseOptionalNum(document.getElementById("recAbdomen").value) ?? 0,
+        peitoral: parseOptionalNum(document.getElementById("recPeitoral").value) ?? 0,
+        // Bioimpedance
+        imc: parseOptionalNum(document.getElementById("recImc").value),
+        gorduraCorporal: parseOptionalNum(document.getElementById("recGorduraCorporal").value),
+        agua: parseOptionalNum(document.getElementById("recAgua").value),
+        proteina: parseOptionalNum(document.getElementById("recProteina").value),
+        metabolismoBasal: parseOptionalNum(document.getElementById("recMetabolismoBasal").value),
+        gorduraVisceral: parseOptionalNum(document.getElementById("recGorduraVisceral").value),
+        musculo: parseOptionalNum(document.getElementById("recMusculo").value),
+        massaOssea: parseOptionalNum(document.getElementById("recMassaOssea").value),
+        tipoCorpo: document.getElementById("recTipoCorpo").value.trim() || "Grosso-conjunto"
       };
 
       if (id) {
         const index = appState.records.findIndex((r) => r.id === id);
-        if (index !== -1) {
-          appState.records[index] = newEntry;
-        }
+        if (index !== -1) appState.records[index] = newEntry;
       } else {
         appState.records.push(newEntry);
       }
 
       window.closeRecordModal();
-      await persistStateToCloud(true);
+      await persistState(true);
     };
 
     // Goal Modal Handlers
@@ -1691,6 +2295,16 @@ function doPost(e) {
       document.getElementById("goalBarriga").value = g.barriga;
       document.getElementById("goalAbdomen").value = g.abdomen;
       document.getElementById("goalPeitoral").value = g.peitoral;
+
+      document.getElementById("goalImc").value = g.imc ?? 31.4;
+      document.getElementById("goalGorduraCorporal").value = g.gorduraCorporal ?? 28.0;
+      document.getElementById("goalAgua").value = g.agua ?? 50.0;
+      document.getElementById("goalProteina").value = g.proteina ?? 16.5;
+      document.getElementById("goalMetabolismoBasal").value = g.metabolismoBasal ?? 1900;
+      document.getElementById("goalGorduraVisceral").value = g.gorduraVisceral ?? 12;
+      document.getElementById("goalMusculo").value = g.musculo ?? 62.0;
+      document.getElementById("goalMassaOssea").value = g.massaOssea ?? 3.3;
+
       document.getElementById("goalModal").classList.remove("hidden");
     };
 
@@ -1710,11 +2324,19 @@ function doPost(e) {
         quadril: parseFloat(document.getElementById("goalQuadril").value),
         barriga: parseFloat(document.getElementById("goalBarriga").value),
         abdomen: parseFloat(document.getElementById("goalAbdomen").value),
-        peitoral: parseFloat(document.getElementById("goalPeitoral").value)
+        peitoral: parseFloat(document.getElementById("goalPeitoral").value),
+        imc: parseFloat(document.getElementById("goalImc").value),
+        gorduraCorporal: parseFloat(document.getElementById("goalGorduraCorporal").value),
+        agua: parseFloat(document.getElementById("goalAgua").value),
+        proteina: parseFloat(document.getElementById("goalProteina").value),
+        metabolismoBasal: parseFloat(document.getElementById("goalMetabolismoBasal").value),
+        gorduraVisceral: parseFloat(document.getElementById("goalGorduraVisceral").value),
+        musculo: parseFloat(document.getElementById("goalMusculo").value),
+        massaOssea: parseFloat(document.getElementById("goalMassaOssea").value)
       };
 
       window.closeGoalModal();
-      await persistStateToCloud(true);
+      await persistState(true);
     };
 
     // Delete & Restore Confirm Modal Handlers
@@ -1729,23 +2351,23 @@ function doPost(e) {
       actionBtn.onclick = async () => {
         appState.records = appState.records.filter((r) => r.id !== recordId);
         window.closeConfirmModal();
-        await persistStateToCloud(true);
+        await persistState(true);
       };
 
       document.getElementById("confirmModal").classList.remove("hidden");
     };
 
     window.openRestoreConfirmModal = function () {
-      document.getElementById("confirmModalTitle").textContent = "Restaurar Planilha Original";
-      document.getElementById("confirmModalMessage").textContent = "Isso restaurará os 5 registros originais e a meta de 31/12/2026 (93,00 kg) da planilha do Alan. Deseja continuar?";
+      document.getElementById("confirmModalTitle").textContent = "Restaurar Planilha + Bioimpedância Originais";
+      document.getElementById("confirmModalMessage").textContent = "Isso restaurará os 5 registros originais (com todas as leituras da balança de bioimpedância) e a meta de 31/12/2026 (93,00 kg). Deseja continuar?";
       const actionBtn = document.getElementById("confirmModalActionBtn");
-      actionBtn.textContent = "Restaurar Dados";
+      actionBtn.textContent = "Restaurar Agora";
       actionBtn.onclick = async () => {
         appState.goal = structuredClone(INITIAL_GOAL);
         appState.records = structuredClone(INITIAL_RECORDS);
         window.closeConfirmModal();
         window.closeSyncModal();
-        await persistStateToCloud(true);
+        await persistState(true);
       };
 
       document.getElementById("confirmModal").classList.remove("hidden");
@@ -1766,8 +2388,7 @@ function doPost(e) {
     };
 
     window.toggleAppsScriptHelp = function () {
-      const box = document.getElementById("appsScriptHelpBox");
-      box.classList.toggle("hidden");
+      document.getElementById("appsScriptHelpBox").classList.toggle("hidden");
     };
 
     window.copyAppsScriptCode = function () {
@@ -1778,7 +2399,7 @@ function doPost(e) {
       temp.select();
       document.execCommand("copy");
       temp.remove();
-      showToast("Código copiado para a área de transferência!");
+      showToast("Código copiado!");
     };
 
     window.saveWebhookUrl = async function () {
@@ -1791,48 +2412,64 @@ function doPost(e) {
           if (resp.ok) {
             const remoteData = await resp.json();
             if (remoteData && remoteData.goal && Array.isArray(remoteData.records)) {
-              appState.goal = remoteData.goal;
-              appState.records = sortRecordsChronologically(remoteData.records);
-              showToast("Dados carregados da Planilha Google com sucesso!");
+              appState = ensureBioimpedanceFieldsMerged(remoteData);
+              showToast("Sincronizado com a Planilha Google!");
             }
           }
         } catch (err) {
-          // If empty or CORS, push current state to initialize remote
+          // Initialize remote on persistState
         }
       }
-      await persistStateToCloud(true);
+      await persistState(true);
     };
 
-    // Export CSV (Compatible with Excel)
+    // Export Complete CSV (Compatible with Excel)
     window.exportToCSV = function () {
       const headers = [
         "DIA",
         "HORA",
-        "PESO NU",
-        "BRACO",
-        "ANTEBRACO",
-        "COXA",
-        "PANTURRILHA",
-        "QUADRIL",
-        "BARRIGA",
-        "ABDOMEN",
-        "PEITORAL"
+        "PESO NU (kg)",
+        "BRACO (cm)",
+        "ANTEBRACO (cm)",
+        "COXA (cm)",
+        "PANTURRILHA (cm)",
+        "QUADRIL (cm)",
+        "BARRIGA (cm)",
+        "ABDOMEN (cm)",
+        "PEITORAL (cm)",
+        "IMC",
+        "GORDURA CORPORAL (%)",
+        "AGUA (%)",
+        "PROTEINA (%)",
+        "METABOLISMO BASAL (kcal)",
+        "GORDURA VISCERAL",
+        "MUSCULO (kg)",
+        "MASSA OSSEA (kg)",
+        "TIPO DE CORPO"
       ];
       const rows = appState.records.map((r) => [
         formatDateBR(r.data),
         r.hora,
         formatWeight(r.peso),
-        r.braco,
-        r.antebraco,
-        r.coxa,
-        r.panturrilha,
-        r.quadril,
-        r.barriga,
-        r.abdomen,
-        r.peitoral
+        r.braco ?? "",
+        r.antebraco ?? "",
+        r.coxa ?? "",
+        r.panturrilha ?? "",
+        r.quadril ?? "",
+        r.barriga ?? "",
+        r.abdomen ?? "",
+        r.peitoral ?? "",
+        r.imc ?? "",
+        r.gorduraCorporal ?? "",
+        r.agua ?? "",
+        r.proteina ?? "",
+        r.metabolismoBasal ?? "",
+        r.gorduraVisceral ?? "",
+        r.musculo ?? "",
+        r.massaOssea ?? "",
+        r.tipoCorpo ?? ""
       ]);
 
-      // Add Goal Row
       const g = appState.goal;
       rows.push([
         `META ${formatDateBR(g.dataMeta)}`,
@@ -1845,21 +2482,27 @@ function doPost(e) {
         g.quadril,
         g.barriga,
         g.abdomen,
-        g.peitoral
+        g.peitoral,
+        g.imc,
+        g.gorduraCorporal,
+        g.agua,
+        g.proteina,
+        g.metabolismoBasal,
+        g.gorduraVisceral,
+        g.musculo,
+        g.massaOssea,
+        ""
       ]);
 
-      const csvContent =
-        "\uFEFF" +
-        [headers.join(";"), ...rows.map((row) => row.join(";"))].join("\r\n");
-
+      const csvContent = "\uFEFF" + [headers.join(";"), ...rows.map((row) => row.join(";"))].join("\r\n");
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `CONTROLE_PESO_E_MEDIDA_ALAN_${new Date().toISOString().slice(0, 10)}.csv`;
+      a.download = `CONTROLE_COMPLETO_ALAN_${new Date().toISOString().slice(0, 10)}.csv`;
       a.click();
       URL.revokeObjectURL(url);
-      showToast("Planilha CSV gerada com sucesso!");
+      showToast("Planilha CSV completa gerada!");
     };
 
     // Export JSON Backup
@@ -1869,7 +2512,7 @@ function doPost(e) {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `backup_peso_medidas_alan_${new Date().toISOString().slice(0, 10)}.json`;
+      a.download = `backup_peso_bio_alan_${new Date().toISOString().slice(0, 10)}.json`;
       a.click();
       URL.revokeObjectURL(url);
       showToast("Backup JSON exportado!");
@@ -1884,10 +2527,9 @@ function doPost(e) {
         try {
           const imported = JSON.parse(e.target.result);
           if (imported && imported.goal && Array.isArray(imported.records)) {
-            appState.goal = imported.goal;
-            appState.records = sortRecordsChronologically(imported.records);
+            appState = ensureBioimpedanceFieldsMerged(imported);
             window.closeSyncModal();
-            await persistStateToCloud(true);
+            await persistState(true);
             showToast("Backup importado com sucesso!");
           } else {
             showToast("Arquivo JSON inválido.", "error");
@@ -1901,7 +2543,6 @@ function doPost(e) {
 
     // Initialize Application on Load
     window.addEventListener("DOMContentLoaded", () => {
-      renderAll();
       initCloudSync();
     });
   </script>
